@@ -1,7 +1,7 @@
 variable "github_repo" {
   description = "GitHub repository formatted as 'username/repo-name'"
   type        = string
-  default     = "AMMAN/aws-exposure-scanner" # Replace with your GitHub Username/Repository
+  default     = "MohammedAmman-Chopadiya-15/aws-exposure-scanner-backend"
 }
 
 # 1. Create the OIDC Identity Provider for GitHub in AWS
