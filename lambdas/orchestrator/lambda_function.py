@@ -1,8 +1,12 @@
+import os
 import json
 import boto3
 from concurrent.futures import ThreadPoolExecutor
 
 lambda_client = boto3.client('lambda')
+
+# Reads the secret token injected by Terraform environment variables
+SECRET_TOKEN = os.environ.get("SCANNER_API_KEY")
 
 AUDITOR_FUNCTIONS = [
     "msc-scanner-auditor-s3",
@@ -70,9 +74,26 @@ def invoke_auditor(function_name):
         return []
 
 def lambda_handler(event, context):
-    raw_findings = []
+    headers = event.get("headers", {}) or {}
+    
+    # API Gateway lowercases incoming header names
+    incoming_token = headers.get("x-api-token") or headers.get("X-Api-Token")
 
-    # Parallel Execution across worker threads
+    # 1. SECURITY AUTHORIZATION CHECK
+    if not SECRET_TOKEN or incoming_token != SECRET_TOKEN:
+        return {
+            "statusCode": 401,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-token"
+            },
+            "body": json.dumps({"error": "Unauthorized: Invalid or missing x-api-token header"})
+        }
+
+    # 2. PARALLEL EXECUTION ACROSS WORKER THREADS
+    raw_findings = []
     with ThreadPoolExecutor(max_workers=len(AUDITOR_FUNCTIONS)) as executor:
         results = executor.map(invoke_auditor, AUDITOR_FUNCTIONS)
         for res in results:
@@ -86,7 +107,7 @@ def lambda_handler(event, context):
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-token"
         },
         "body": json.dumps({"findings": consolidated})
     }

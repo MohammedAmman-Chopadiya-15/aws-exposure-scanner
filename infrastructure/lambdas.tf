@@ -79,6 +79,12 @@ resource "aws_lambda_function" "orchestrator" {
   timeout          = 45
   filename         = data.archive_file.zip_orchestrator.output_path
   source_code_hash = data.archive_file.zip_orchestrator.output_base64sha256
+
+  environment {
+    variables = {
+      SCANNER_API_KEY = var.scanner_api_key
+    }
+  }
 }
 
 # --- 3. API GATEWAY INTEGRATION ---

@@ -9,3 +9,9 @@ variable "app_name" {
   type        = string
   default     = "msc-exposure-scanner"
 }
+
+variable "scanner_api_key" {
+  description = "Secret key required to authorize requests to API Gateway"
+  type        = string
+  sensitive   = true
+}
