@@ -9,10 +9,10 @@ lambda_client = boto3.client('lambda')
 SECRET_TOKEN = os.environ.get("SCANNER_API_KEY")
 
 AUDITOR_FUNCTIONS = [
-    "msc-scanner-auditor-s3",
-    "msc-scanner-auditor-ec2",
-    "msc-scanner-auditor-rds",
-    "msc-scanner-auditor-iam"
+    "exposure-scanner-auditor-s3",
+    "exposure-scanner-auditor-ec2",
+    "exposure-scanner-auditor-rds",
+    "exposure-scanner-auditor-iam"
 ]
 
 def consolidate_and_score(raw_findings):

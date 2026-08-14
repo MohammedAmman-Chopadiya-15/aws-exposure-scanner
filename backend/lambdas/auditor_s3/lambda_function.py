@@ -15,7 +15,8 @@ def run_s3_scan():
 
     for bucket in buckets:
         bucket_name = bucket['Name']
-        
+        bucket_findings = []
+
         # 1. Public Access Block
         is_public_blocked = False
         try:
@@ -28,7 +29,7 @@ def run_s3_scan():
             is_public_blocked = False
 
         if not is_public_blocked:
-            findings.append({
+            bucket_findings.append({
                 "resource_name": bucket_name,
                 "service": "S3",
                 "region": "global",
@@ -42,7 +43,7 @@ def run_s3_scan():
         try:
             policy_status = s3_client.get_bucket_policy_status(Bucket=bucket_name)
             if policy_status.get('PolicyStatus', {}).get('IsPublic', False):
-                findings.append({
+                bucket_findings.append({
                     "resource_name": bucket_name,
                     "service": "S3",
                     "region": "global",
@@ -59,7 +60,7 @@ def run_s3_scan():
             ownership = s3_client.get_bucket_ownership_controls(Bucket=bucket_name)
             rules = ownership.get('OwnershipControls', {}).get('Rules', [])
             if not any(rule.get('ObjectOwnership') == 'BucketOwnerEnforced' for rule in rules):
-                findings.append({
+                bucket_findings.append({
                     "resource_name": bucket_name,
                     "service": "S3",
                     "region": "global",
@@ -69,7 +70,7 @@ def run_s3_scan():
                     "remediation_suggestion": f"aws s3api put-bucket-ownership-controls --bucket {bucket_name} --ownership-controls Rules=[{{ObjectOwnership=BucketOwnerEnforced}}]"
                 })
         except ClientError:
-            findings.append({
+            bucket_findings.append({
                 "resource_name": bucket_name,
                 "service": "S3",
                 "region": "global",
@@ -84,7 +85,7 @@ def run_s3_scan():
             s3_client.get_bucket_encryption(Bucket=bucket_name)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ServerSideEncryptionConfigurationNotFoundError':
-                findings.append({
+                bucket_findings.append({
                     "resource_name": bucket_name,
                     "service": "S3",
                     "region": "global",
@@ -98,7 +99,7 @@ def run_s3_scan():
         try:
             version_resp = s3_client.get_bucket_versioning(Bucket=bucket_name)
             if version_resp.get('Status') != 'Enabled':
-                findings.append({
+                bucket_findings.append({
                     "resource_name": bucket_name,
                     "service": "S3",
                     "region": "global",
@@ -109,6 +110,20 @@ def run_s3_scan():
                 })
         except ClientError:
             pass
+
+        # IF COMPLIANT: Append baseline ADVISORY entry so zero-exposure buckets appear
+        if not bucket_findings:
+            bucket_findings.append({
+                "resource_name": bucket_name,
+                "service": "S3",
+                "region": "global",
+                "severity_level": "ADVISORY",
+                "risk_score": 0.0,
+                "vulnerability_description": "Bucket fully complies with baseline security policies.",
+                "remediation_suggestion": "No action required."
+            })
+
+        findings.extend(bucket_findings)
 
     return findings
 

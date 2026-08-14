@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "app_name" {
   description = "Base prefix for resource naming"
   type        = string
-  default     = "msc-exposure-scanner"
+  default     = "exposure-scanner"
 }
 
 variable "scanner_api_key" {

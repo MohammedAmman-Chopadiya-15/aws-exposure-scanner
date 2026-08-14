@@ -24,6 +24,7 @@ def run_ec2_scan_region(region):
     except ClientError:
         pass
 
+    # 1. Audit Security Groups
     try:
         sg_response = ec2.describe_security_groups()
         for sg in sg_response.get('SecurityGroups', []):
@@ -33,6 +34,7 @@ def run_ec2_scan_region(region):
                 continue
 
             resource_display_name = sg_name if sg_name != 'default' else f"SecurityGroup-{sg_id}"
+            sg_findings = []
 
             for rule in sg.get('IpPermissions', []):
                 from_port = rule.get('FromPort')
@@ -42,7 +44,7 @@ def run_ec2_scan_region(region):
 
                 if is_global and from_port is not None and to_port is not None:
                     if (from_port <= 22 <= to_port) or (from_port <= 3389 <= to_port) or ip_protocol == '-1':
-                        findings.append({
+                        sg_findings.append({
                             "resource_name": resource_display_name,
                             "service": "EC2",
                             "region": region,
@@ -51,9 +53,23 @@ def run_ec2_scan_region(region):
                             "risk_score": 9.5,
                             "remediation_suggestion": f"aws ec2 revoke-security-group-ingress --group-id {sg_id} --protocol tcp --port 22 --cidr 0.0.0.0/0 --region {region}"
                         })
+
+            if not sg_findings:
+                sg_findings.append({
+                    "resource_name": resource_display_name,
+                    "service": "EC2",
+                    "region": region,
+                    "vulnerability_description": f"[{region}] Security Group '{sg_name}' ({sg_id}) audited and compliant.",
+                    "severity_level": "ADVISORY",
+                    "risk_score": 0.0,
+                    "remediation_suggestion": "Security Group rule definitions meet baseline policy."
+                })
+
+            findings.extend(sg_findings)
     except ClientError:
         pass
 
+    # 2. Audit EC2 Instances
     try:
         instance_response = ec2.describe_instances()
         for reservation in instance_response.get('Reservations', []):
@@ -62,20 +78,11 @@ def run_ec2_scan_region(region):
                     continue
                 instance_id = instance['InstanceId']
                 display_name = get_instance_name(instance)
-
-                findings.append({
-                    "resource_name": display_name,
-                    "service": "EC2",
-                    "region": region,
-                    "vulnerability_description": f"[{region}] EC2 Instance '{display_name}' ({instance_id}) audited.",
-                    "severity_level": "ADVISORY",
-                    "risk_score": 0.0,
-                    "remediation_suggestion": "Instance baseline checked."
-                })
+                inst_findings = []
 
                 metadata_options = instance.get('MetadataOptions', {})
                 if metadata_options.get('HttpTokens') != 'required':
-                    findings.append({
+                    inst_findings.append({
                         "resource_name": display_name,
                         "service": "EC2",
                         "region": region,
@@ -84,6 +91,19 @@ def run_ec2_scan_region(region):
                         "risk_score": 7.8,
                         "remediation_suggestion": f"aws ec2 modify-instance-metadata-options --instance-id {instance_id} --http-tokens required --http-endpoint enabled --region {region}"
                     })
+
+                if not inst_findings:
+                    inst_findings.append({
+                        "resource_name": display_name,
+                        "service": "EC2",
+                        "region": region,
+                        "vulnerability_description": f"[{region}] EC2 Instance '{display_name}' ({instance_id}) audited and compliant.",
+                        "severity_level": "ADVISORY",
+                        "risk_score": 0.0,
+                        "remediation_suggestion": "Instance meets baseline configuration policy."
+                    })
+
+                findings.extend(inst_findings)
     except ClientError:
         pass
 
