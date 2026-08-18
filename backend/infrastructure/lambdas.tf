@@ -36,7 +36,7 @@ resource "aws_lambda_function" "dynamic_auditors" {
   role             = aws_iam_role.lambda_exec_role.arn
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.12"
-  timeout          = 30
+  timeout          = 60
   filename         = data.archive_file.dynamic_auditor_zips[each.value].output_path
   source_code_hash = data.archive_file.dynamic_auditor_zips[each.value].output_base64sha256
 }

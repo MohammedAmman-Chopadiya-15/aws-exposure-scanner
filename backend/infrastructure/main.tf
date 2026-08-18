@@ -79,3 +79,31 @@ resource "aws_apigatewayv2_stage" "api_stage" {
   name        = "$default"
   auto_deploy = true
 }
+
+# Automatically update VITE_API_URL in existing .env file
+
+resource "null_resource" "update_frontend_env" {
+  triggers = {
+    api_url = aws_apigatewayv2_stage.api_stage.invoke_url
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["PowerShell", "-Command"]
+    command     = <<-EOT
+      $envFile = "${path.module}/../../frontend/.env"
+      $newUrl = "VITE_API_URL=${aws_apigatewayv2_stage.api_stage.invoke_url}/api/scan"
+      
+      if (Test-Path $envFile) {
+        $content = Get-Content $envFile
+        if ($content -match '^VITE_API_URL=') {
+          $content = $content -replace '^VITE_API_URL=.*', $newUrl
+        } else {
+          $content += $newUrl
+        }
+        Set-Content -Path $envFile -Value $content
+      } else {
+        Set-Content -Path $envFile -Value $newUrl
+      }
+    EOT
+  }
+}

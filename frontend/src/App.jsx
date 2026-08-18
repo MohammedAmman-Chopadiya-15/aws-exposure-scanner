@@ -90,7 +90,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* ENHANCED REFRESH BUTTON WITH DISABLED STATE & SCANNING TEXT */}
+            {/* REFRESH BUTTON WITH DISABLED STATE & SCANNING TEXT */}
             <button 
               onClick={fetchData} 
               disabled={loading}
@@ -214,7 +214,7 @@ function DashboardPage({ data, loading, onSelectResource }) {
             <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
             <div>
               <p className="text-xs font-bold font-mono">Parallel Security Scan in Progress...</p>
-              <p className="text-[11px] text-purple-300/70 font-mono">Querying S3, EC2, RDS, and IAM auditor functions across AWS regions.</p>
+              <p className="text-[11px] text-purple-300/70 font-mono">Querying S3, EC2, RDS, IAM, Lambda, and API Gateway auditor functions across AWS regions.</p>
             </div>
           </div>
           <span className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-purple-900/60 border border-purple-700 font-bold uppercase">
@@ -270,10 +270,10 @@ function DashboardPage({ data, loading, onSelectResource }) {
       {/* DASHBOARD FILTER BAR */}
       <div className="bg-[#121318] border border-neutral-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         
-        {/* Service Filter */}
+        {/* Service Filter (Includes APIGATEWAY) */}
         <div className="flex items-center space-x-2">
           <span className="text-xs font-mono text-neutral-400 uppercase">Service:</span>
-          {['ALL', 'S3', 'EC2', 'RDS', 'IAM'].map(s => (
+          {['ALL', 'S3', 'EC2', 'RDS', 'IAM', 'LAMBDA', 'APIGATEWAY'].map(s => (
             <button
               key={s}
               onClick={() => setFilterService(s)}
@@ -482,9 +482,10 @@ function InventoryPage({ data, loading, onSelectResource }) {
       </div>
 
       <div className="bg-[#121318] border border-neutral-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+        {/* Service Filter (Includes APIGATEWAY) */}
         <div className="flex items-center space-x-2">
           <span className="text-xs font-mono text-neutral-400 uppercase">Service:</span>
-          {['ALL', 'S3', 'EC2', 'RDS', 'IAM'].map(s => (
+          {['ALL', 'S3', 'EC2', 'RDS', 'IAM', 'LAMBDA', 'APIGATEWAY'].map(s => (
             <button
               key={s}
               onClick={() => setFilterService(s)}

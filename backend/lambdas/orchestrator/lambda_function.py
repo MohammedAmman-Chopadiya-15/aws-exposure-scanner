@@ -1,3 +1,4 @@
+# orchestrator.py
 import os
 import json
 import boto3
@@ -12,7 +13,9 @@ AUDITOR_FUNCTIONS = [
     "exposure-scanner-auditor-s3",
     "exposure-scanner-auditor-ec2",
     "exposure-scanner-auditor-rds",
-    "exposure-scanner-auditor-iam"
+    "exposure-scanner-auditor-iam",
+    "exposure-scanner-auditor-lambda",
+    "exposure-scanner-auditor-apigateway"
 ]
 
 def consolidate_and_score(raw_findings):
