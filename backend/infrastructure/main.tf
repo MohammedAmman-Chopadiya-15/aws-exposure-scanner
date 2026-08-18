@@ -80,7 +80,7 @@ resource "aws_apigatewayv2_stage" "api_stage" {
   auto_deploy = true
 }
 
-# Automatically update VITE_API_URL in existing .env file
+# Automatically update VITE_API_URL in existing .env file to make deployment easier
 
 resource "null_resource" "update_frontend_env" {
   triggers = {
