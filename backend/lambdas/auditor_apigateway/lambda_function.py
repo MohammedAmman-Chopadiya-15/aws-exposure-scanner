@@ -27,6 +27,13 @@ def scan_apigw_v2_region(apigwv2_client, region):
         for api in apis_resp.get('Items', []):
             api_id = api['ApiId']
             api_name = api.get('Name', api_id)
+
+            # -------------------------------------------------------------
+            # EXCLUSION FILTER: Skip scanner's own operational API Gateway
+            # -------------------------------------------------------------
+            if api_name.startswith("exposure-scanner-"):
+                continue
+
             disable_execute_api = api.get('DisableExecuteApiEndpoint', False)
             api_findings = []
 
@@ -139,6 +146,13 @@ def scan_apigw_v1_region(apigw_client, region):
         for api in apis_resp.get('items', []):
             api_id = api['id']
             api_name = api.get('name', api_id)
+
+            # -------------------------------------------------------------
+            # EXCLUSION FILTER: Skip scanner's own operational REST API
+            # -------------------------------------------------------------
+            if api_name.startswith("exposure-scanner-"):
+                continue
+
             endpoint_config = api.get('endpointConfiguration', {})
             types = endpoint_config.get('types', ['REGIONAL'])
             policy = api.get('policy')
@@ -162,7 +176,8 @@ def scan_apigw_v1_region(apigw_client, region):
             # APIGW-01: UNAUTHENTICATED REST METHODS
             # -------------------------------------------------------------
             try:
-                resources_resp = apigw_client.get_resources(restApiId=api_id)
+                # Using embed=['methods'] instructs AWS to populate authorizationType
+                resources_resp = apigw_client.get_resources(restApiId=api_id, embed=['methods'])
                 for res in resources_resp.get('items', []):
                     res_path = res.get('path', '/')
                     res_id = res.get('id')
