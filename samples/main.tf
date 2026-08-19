@@ -1,4 +1,4 @@
-# main.tf
+# samples/main.tf
 
 terraform {
   required_version = ">= 1.0"
@@ -6,6 +6,10 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
     }
   }
 }
@@ -31,8 +35,7 @@ provider "aws" {
 }
 
 # ---------------------------------------------------------------------
-# SERVICE SELECTION TOGGLES (Default: false)
-# Toggle these flags at runtime via CLI to deploy specific services
+# SERVICE SELECTION TOGGLES
 # ---------------------------------------------------------------------
 variable "deploy_s3" {
   type        = bool
@@ -52,9 +55,20 @@ variable "deploy_iam" {
   description = "Set to true to deploy IAM lab infrastructure"
 }
 
-
 variable "deploy_rds" {
   type        = bool
   default     = false
   description = "Set to true to deploy RDS lab infrastructure"
+}
+
+variable "deploy_lambda" {
+  type        = bool
+  default     = false
+  description = "Set to true to deploy Lambda lab infrastructure"
+}
+
+variable "deploy_apigateway" {
+  type        = bool
+  default     = false
+  description = "Set to true to deploy API Gateway lab infrastructure"
 }

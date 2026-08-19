@@ -1,61 +1,85 @@
 # iam_lab.tf
 
 # ---------------------------------------------------------------------
-# SCENARIO 1: CRITICAL USER (Direct Admin Access)
+# SCENARIO 1: HIGH RISK USER (Direct AdministratorAccess - IAM-03)
 # ---------------------------------------------------------------------
-resource "aws_iam_user" "critical_user" {
-  count = var.deploy_iam ? 1 : 0
-  name  = "msc-lab-critical-admin-user"
-  path  = "/lab/"
+resource "aws_iam_user" "high_admin_user" {
+  count         = var.deploy_iam ? 1 : 0
+  name          = "msc-lab-high-admin-user"
+  path          = "/lab/"
+  force_destroy = true
 }
 
-resource "aws_iam_user_policy_attachment" "critical_admin_attach" {
+resource "aws_iam_user_policy_attachment" "high_admin_attach" {
   count      = var.deploy_iam ? 1 : 0
-  user       = aws_iam_user.critical_user[0].name
+  user       = aws_iam_user.high_admin_user[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 # ---------------------------------------------------------------------
-# SCENARIO 2: COMPLIANT READ-ONLY USER
+# SCENARIO 2: MEDIUM RISK USER (Console Password Without MFA - IAM-05)
+# ---------------------------------------------------------------------
+resource "aws_iam_user" "medium_console_user" {
+  count         = var.deploy_iam ? 1 : 0
+  name          = "msc-lab-medium-console-user"
+  path          = "/lab/"
+  force_destroy = true
+}
+
+resource "aws_iam_user_login_profile" "medium_console_login" {
+  count                   = var.deploy_iam ? 1 : 0
+  user                    = aws_iam_user.medium_console_user[0].name
+  password_reset_required = false
+}
+
+# ---------------------------------------------------------------------
+# SCENARIO 3: LOW RISK USER (Multiple Active Access Keys - IAM-08)
+# ---------------------------------------------------------------------
+resource "aws_iam_user" "low_keys_user" {
+  count         = var.deploy_iam ? 1 : 0
+  name          = "msc-lab-low-multiple-keys-user"
+  path          = "/lab/"
+  force_destroy = true
+}
+
+resource "aws_iam_access_key" "key_one" {
+  count  = var.deploy_iam ? 1 : 0
+  user   = aws_iam_user.low_keys_user[0].name
+  status = "Active"
+}
+
+resource "aws_iam_access_key" "key_two" {
+  count  = var.deploy_iam ? 1 : 0
+  user   = aws_iam_user.low_keys_user[0].name
+  status = "Active"
+}
+
+# ---------------------------------------------------------------------
+# SCENARIO 4: COMPLIANT / PERFECT USER (Group Inherited - ADVISORY: 0.0)
 # ---------------------------------------------------------------------
 resource "aws_iam_user" "perfect_user" {
+  count         = var.deploy_iam ? 1 : 0
+  name          = "msc-lab-perfect-read-only-user"
+  path          = "/lab/"
+  force_destroy = true
+}
+
+resource "aws_iam_group" "compliant_group" {
   count = var.deploy_iam ? 1 : 0
-  name  = "msc-lab-perfect-read-only-user"
+  name  = "msc-lab-readonly-group"
   path  = "/lab/"
 }
 
-resource "aws_iam_policy" "compliant_policy" {
-  count       = var.deploy_iam ? 1 : 0
-  name        = "msc-lab-restricted-s3-read-policy"
-  description = "Compliant least-privilege policy"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["s3:ListAllMyBuckets", "s3:GetBucketLocation"]
-        Resource = "arn:aws:s3:::*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_user_policy_attachment" "perfect_user_attach" {
+resource "aws_iam_group_policy_attachment" "compliant_group_attach" {
   count      = var.deploy_iam ? 1 : 0
-  user       = aws_iam_user.perfect_user[0].name
-  policy_arn = aws_iam_policy.compliant_policy[0].arn
+  group      = aws_iam_group.compliant_group[0].name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
-# ---------------------------------------------------------------------
-# SCENARIO 3: WEAK ACCOUNT PASSWORD POLICY
-# ---------------------------------------------------------------------
-resource "aws_iam_account_password_policy" "lab_password_policy" {
-  count                          = var.deploy_iam ? 1 : 0
-  minimum_password_length        = 8
-  require_symbols                = false
-  require_numbers                = true
-  require_uppercase_characters   = true
-  require_lowercase_characters   = true
-  allow_users_to_change_password = true
+resource "aws_iam_user_group_membership" "perfect_user_membership" {
+  count = var.deploy_iam ? 1 : 0
+  user  = aws_iam_user.perfect_user[0].name
+  groups = [
+    aws_iam_group.compliant_group[0].name
+  ]
 }
