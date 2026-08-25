@@ -1,22 +1,27 @@
-# lambdas/auditor_rds/lambda_function.py
 import json
+import logging
 import boto3
 from concurrent.futures import ThreadPoolExecutor
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from regions import get_enabled_regions
 
-# Fast network timeout config
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Setting aggressive timeouts to prevent slow regional endpoints from stalling the scan
 FAST_AWS_CONFIG = Config(
     connect_timeout=2,
     read_timeout=4,
     retries={'max_attempts': 1}
 )
 
+
 def run_rds_scan_region(region):
     rds = boto3.client('rds', region_name=region, config=FAST_AWS_CONFIG)
     findings = []
 
+    # Querying all active RDS database instances in the target region
     try:
         response = rds.describe_db_instances()
         for db in response.get('DBInstances', []):
@@ -24,9 +29,7 @@ def run_rds_scan_region(region):
             engine = db.get('Engine', 'unknown')
             instance_findings = []
 
-            # -------------------------------------------------------------
-            # RDS-01: CRITICAL - Publicly Accessible Check
-            # -------------------------------------------------------------
+            # Checking if the database is exposed directly to the public internet
             if db.get('PubliclyAccessible', False):
                 instance_findings.append({
                     "resource_name": db_id,
@@ -38,9 +41,7 @@ def run_rds_scan_region(region):
                     "remediation_suggestion": f"aws rds modify-db-instance --db-instance-identifier {db_id} --no-publicly-accessible --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # RDS-02: HIGH - Storage Encryption at Rest
-            # -------------------------------------------------------------
+            # Checking if storage-level encryption at rest is enabled
             if not db.get('StorageEncrypted', False):
                 instance_findings.append({
                     "resource_name": db_id,
@@ -52,9 +53,7 @@ def run_rds_scan_region(region):
                     "remediation_suggestion": f"Create an encrypted snapshot of '{db_id}' and restore to a new encrypted instance in region {region}."
                 })
 
-            # -------------------------------------------------------------
-            # RDS-03: HIGH - Automated Backups / Backup Retention Period
-            # -------------------------------------------------------------
+            # Verifying that automated backup retention is not set to zero days
             backup_retention = db.get('BackupRetentionPeriod', 0)
             if backup_retention == 0:
                 instance_findings.append({
@@ -67,9 +66,7 @@ def run_rds_scan_region(region):
                     "remediation_suggestion": f"aws rds modify-db-instance --db-instance-identifier {db_id} --backup-retention-period 7 --apply-immediately --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # RDS-04: MEDIUM - Multi-AZ High Availability
-            # -------------------------------------------------------------
+            # Evaluating whether Multi-AZ deployment is active for high availability
             if not db.get('MultiAZ', False):
                 instance_findings.append({
                     "resource_name": db_id,
@@ -81,9 +78,7 @@ def run_rds_scan_region(region):
                     "remediation_suggestion": f"aws rds modify-db-instance --db-instance-identifier {db_id} --multi-az --apply-immediately --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # RDS-05: MEDIUM - Auto Minor Version Upgrades
-            # -------------------------------------------------------------
+            # Checking if automatic minor version patching is turned on
             if not db.get('AutoMinorVersionUpgrade', False):
                 instance_findings.append({
                     "resource_name": db_id,
@@ -95,9 +90,7 @@ def run_rds_scan_region(region):
                     "remediation_suggestion": f"aws rds modify-db-instance --db-instance-identifier {db_id} --auto-minor-version-upgrade --apply-immediately --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # RDS-06: ADVISORY - Fully Compliant Baseline Record
-            # -------------------------------------------------------------
+            # Adding a baseline advisory record if all security checks passed
             if not instance_findings:
                 instance_findings.append({
                     "resource_name": db_id,
@@ -112,24 +105,24 @@ def run_rds_scan_region(region):
             findings.extend(instance_findings)
 
     except ClientError as e:
+        # Ignoring expected authorization errors while logging unexpected regional failures
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing RDS instances in region '{region}': {e}")
+            logger.error(f"Auditing RDS instances in region '{region}' failed: {e}")
 
     return findings
 
+
 def lambda_handler(event, context):
-    """
-    Executes multi-threaded regional audits across all enabled AWS regions.
-    """
+    # Fetching all active regions and auditing them in parallel
     regions = get_enabled_regions()
     all_findings = []
 
     with ThreadPoolExecutor(max_workers=len(regions) or 1) as executor:
-        results = executor.map(run_rds_scan_region, regions)
-        for res in results:
+        for res in executor.map(run_rds_scan_region, regions):
             all_findings.extend(res)
 
     return all_findings
+
 
 if __name__ == "__main__":
     print(json.dumps(lambda_handler({}, None), indent=2))

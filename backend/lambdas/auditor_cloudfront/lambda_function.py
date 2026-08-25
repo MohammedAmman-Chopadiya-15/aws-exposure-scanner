@@ -1,16 +1,20 @@
-# lambdas/auditor_cloudfront/lambda_function.py
 import json
+import logging
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Setting aggressive timeouts to prevent slow API calls from stalling execution
 FAST_AWS_CONFIG = Config(
     connect_timeout=2,
     read_timeout=4,
     retries={'max_attempts': 1}
 )
 
-# Known insecure and outdated viewer certificate security policies
+# Tracking outdated viewer certificate policies vulnerable to known TLS flaws
 LEGACY_TLS_POLICIES = {
     "SSLv3",
     "TLSv1",
@@ -18,16 +22,14 @@ LEGACY_TLS_POLICIES = {
     "TLSv1.1_2016"
 }
 
+
 def run_cloudfront_scan():
-    """
-    Audits Amazon CloudFront Distributions against AWS security baselines.
-    Returns flat finding dictionaries mapped to orchestrator schema.
-    """
-    # CloudFront control plane is global and routed via us-east-1
+    # Calling CloudFront globally via the us-east-1 endpoint
     cf_client = boto3.client('cloudfront', region_name='us-east-1', config=FAST_AWS_CONFIG)
     findings = []
     region = "global"
 
+    # Paginating through all CloudFront distributions in the account
     try:
         paginator = cf_client.get_paginator('list_distributions')
         for page in paginator.paginate():
@@ -39,16 +41,14 @@ def run_cloudfront_scan():
                 display_name = f"{aliases[0]} ({dist_id})" if aliases else f"{domain_name} ({dist_id})"
                 dist_findings = []
 
-                # -------------------------------------------------------------
-                # CF-01: S3 ORIGIN WITHOUT OAC / OAI
-                # -------------------------------------------------------------
+                # Checking if S3 origins are secured with Origin Access Control or Identity
                 origins = dist.get('Origins', {}).get('Items', [])
                 for origin in origins:
                     domain = origin.get('DomainName', '')
                     s3_origin_config = origin.get('S3OriginConfig')
                     oac_id = origin.get('OriginAccessControlId')
 
-                    # Detect if target is an S3 bucket origin
+                    # Detecting whether the origin points directly to an S3 bucket
                     if 's3.amazonaws.com' in domain or 's3.' in domain or s3_origin_config is not None:
                         has_oai = bool(s3_origin_config and s3_origin_config.get('OriginAccessIdentity'))
                         has_oac = bool(oac_id)
@@ -64,9 +64,7 @@ def run_cloudfront_scan():
                                 "remediation_suggestion": f"Associate an Origin Access Control (OAC) with origin '{origin.get('Id')}' and restrict S3 bucket policy."
                             })
 
-                # -------------------------------------------------------------
-                # CF-02: INSECURE VIEWER PROTOCOL (ALLOW-ALL HTTP)
-                # -------------------------------------------------------------
+                # Checking if the default cache behavior allows unencrypted HTTP traffic
                 default_cache = dist.get('DefaultCacheBehavior', {})
                 viewer_protocol = default_cache.get('ViewerProtocolPolicy', 'allow-all')
 
@@ -81,7 +79,7 @@ def run_cloudfront_scan():
                         "remediation_suggestion": f"Update ViewerProtocolPolicy to 'redirect-to-https' or 'https-only' for distribution '{dist_id}'."
                     })
 
-                # Check custom cache behaviors
+                # Inspecting custom cache behaviors for insecure HTTP policies
                 custom_cache_behaviors = dist.get('CacheBehaviors', {}).get('Items', [])
                 for cb in custom_cache_behaviors:
                     cb_protocol = cb.get('ViewerProtocolPolicy', 'allow-all')
@@ -97,9 +95,7 @@ def run_cloudfront_scan():
                             "remediation_suggestion": f"Update path pattern '{path_pattern}' ViewerProtocolPolicy to 'redirect-to-https'."
                         })
 
-                # -------------------------------------------------------------
-                # CF-03: MISSING WAF WEB ACL
-                # -------------------------------------------------------------
+                # Checking if an AWS WAF Web ACL is attached to the distribution
                 web_acl_id = dist.get('WebACLId', '')
                 if not web_acl_id:
                     dist_findings.append({
@@ -112,14 +108,11 @@ def run_cloudfront_scan():
                         "remediation_suggestion": f"Associate an AWS WAFv2 Web ACL (CLOUDFRONT scope) with distribution '{dist_id}'."
                     })
 
-                # -------------------------------------------------------------
-                # CF-04: OUTDATED VIEWER TLS PROTOCOL
-                # -------------------------------------------------------------
+                # Verifying that custom SSL certificates use modern TLS version policies
                 viewer_cert = dist.get('ViewerCertificate', {})
                 is_default_cert = viewer_cert.get('CloudFrontDefaultCertificate', False)
                 min_protocol_version = viewer_cert.get('MinimumProtocolVersion', 'TLSv1')
 
-                # Only evaluate custom certificates (default cloudfront.net certificates enforce modern TLS automatically)
                 if not is_default_cert and min_protocol_version in LEGACY_TLS_POLICIES:
                     dist_findings.append({
                         "resource_name": display_name,
@@ -131,9 +124,7 @@ def run_cloudfront_scan():
                         "remediation_suggestion": f"Update ViewerCertificate MinimumProtocolVersion to 'TLSv1.2_2021' for distribution '{dist_id}'."
                     })
 
-                # -------------------------------------------------------------
-                # CF-05: STANDARD ACCESS LOGGING DISABLED
-                # -------------------------------------------------------------
+                # Checking if standard access logging is turned on
                 logging_config = dist.get('Logging', {})
                 if not logging_config.get('Enabled', False):
                     dist_findings.append({
@@ -146,9 +137,7 @@ def run_cloudfront_scan():
                         "remediation_suggestion": f"Enable standard access logging targeting a designated logging S3 bucket for distribution '{dist_id}'."
                     })
 
-                # -------------------------------------------------------------
-                # CF-06: BASELINE COMPLIANT RECORD
-                # -------------------------------------------------------------
+                # Adding a baseline advisory record if all distribution checks passed
                 if not dist_findings:
                     dist_findings.append({
                         "resource_name": display_name,
@@ -163,16 +152,16 @@ def run_cloudfront_scan():
                 findings.extend(dist_findings)
 
     except ClientError as e:
+        # Logging unexpected failures while ignoring expected permission denials
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing CloudFront: {e}")
+            logger.error(f"Auditing CloudFront failed: {e}")
 
     return findings
 
+
 def lambda_handler(event, context):
-    """
-    Entry point for the AWS CloudFront auditor Lambda.
-    """
     return run_cloudfront_scan()
+
 
 if __name__ == "__main__":
     print(json.dumps(lambda_handler({}, None), indent=2))

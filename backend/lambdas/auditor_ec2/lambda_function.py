@@ -1,11 +1,15 @@
-# lambdas/auditor_ec2/lambda_function.py
 import json
+import logging
 import boto3
 from concurrent.futures import ThreadPoolExecutor
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from regions import get_enabled_regions
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Setting fast network timeouts so slow regional endpoints don't block execution
 FAST_AWS_CONFIG = Config(
     connect_timeout=2,
     read_timeout=4,
@@ -14,19 +18,22 @@ FAST_AWS_CONFIG = Config(
 
 DATABASE_PORTS = {3306, 5432, 1433, 1521, 27017, 6379, 9200}
 
+
 def get_instance_name(instance):
+    # Extracting the Name tag if available, otherwise defaulting to the instance ID
     for tag in instance.get('Tags', []):
         if tag.get('Key') == 'Name':
             return tag.get('Value')
     return instance['InstanceId']
 
+
 def run_ec2_scan_region(region):
     ec2 = boto3.client('ec2', region_name=region, config=FAST_AWS_CONFIG)
     findings = []
     active_attached_sg_ids = set()
-
-    # Track active attached security groups and instances
     instances_list = []
+
+    # Collecting active non-terminated instances and tracking their attached security groups
     try:
         instance_response = ec2.describe_instances()
         for reservation in instance_response.get('Reservations', []):
@@ -37,19 +44,17 @@ def run_ec2_scan_region(region):
                 for sg in instance.get('SecurityGroups', []):
                     active_attached_sg_ids.add(sg['GroupId'])
     except ClientError as e:
-        print(f"[ERROR] Describing instances in {region}: {e}")
+        logger.error(f"Describing instances failed in {region}: {e}")
         return findings
 
-    # -------------------------------------------------------------------------
-    # 1. AUDIT SECURITY GROUPS (EC2-01, EC2-02, EC2-03)
-    # -------------------------------------------------------------------------
+    # Auditing security group ingress rules for unrestricted access
     try:
         sg_response = ec2.describe_security_groups()
         for sg in sg_response.get('SecurityGroups', []):
             sg_id = sg['GroupId']
             sg_name = sg['GroupName']
-            
-            # Skip unattached default security groups
+
+            # Skipping unused default security groups to avoid false positives
             if sg_name == 'default' and sg_id not in active_attached_sg_ids:
                 continue
 
@@ -63,7 +68,7 @@ def run_ec2_scan_region(region):
                 is_global = any(ip_range.get('CidrIp') == '0.0.0.0/0' for ip_range in rule.get('IpRanges', []))
 
                 if is_global:
-                    # EC2-03: All traffic open
+                    # Flagging security groups allowing all traffic on all ports globally
                     if ip_protocol == '-1' or (from_port == 0 and to_port == 65535):
                         sg_findings.append({
                             "resource_name": resource_display_name,
@@ -75,7 +80,7 @@ def run_ec2_scan_region(region):
                             "remediation_suggestion": f"aws ec2 revoke-security-group-ingress --group-id {sg_id} --protocol all --cidr 0.0.0.0/0 --region {region}"
                         })
 
-                    # EC2-01: Admin Ports (SSH: 22, RDP: 3389)
+                    # Flagging global exposure of remote administrative ports (SSH and RDP)
                     if from_port is not None and to_port is not None:
                         if (from_port <= 22 <= to_port) or (from_port <= 3389 <= to_port):
                             sg_findings.append({
@@ -88,7 +93,7 @@ def run_ec2_scan_region(region):
                                 "remediation_suggestion": f"aws ec2 revoke-security-group-ingress --group-id {sg_id} --protocol tcp --port 22 --cidr 0.0.0.0/0 --region {region}"
                             })
 
-                        # EC2-02: Database Ports
+                        # Checking for database ports exposed directly to the public internet
                         if any(from_port <= db_port <= to_port for db_port in DATABASE_PORTS):
                             sg_findings.append({
                                 "resource_name": resource_display_name,
@@ -100,6 +105,7 @@ def run_ec2_scan_region(region):
                                 "remediation_suggestion": f"aws ec2 revoke-security-group-ingress --group-id {sg_id} --protocol tcp --port {from_port} --cidr 0.0.0.0/0 --region {region}"
                             })
 
+            # Adding a baseline advisory record if the security group rules are safe
             if not sg_findings:
                 sg_findings.append({
                     "resource_name": resource_display_name,
@@ -113,17 +119,15 @@ def run_ec2_scan_region(region):
 
             findings.extend(sg_findings)
     except ClientError as e:
-        print(f"[ERROR] Describing security groups in {region}: {e}")
+        logger.error(f"Describing security groups failed in {region}: {e}")
 
-    # -------------------------------------------------------------------------
-    # 2. AUDIT EC2 INSTANCES & ATTACHED VOLUMES (EC2-04, EC2-05, EC2-06)
-    # -------------------------------------------------------------------------
+    # Auditing EC2 instances for metadata security, public IPs, and volume encryption
     for instance in instances_list:
         instance_id = instance['InstanceId']
         display_name = get_instance_name(instance)
         inst_findings = []
 
-        # EC2-04: IMDSv1 Check
+        # Checking if IMDSv2 is enforced to prevent SSRF credential theft
         metadata_options = instance.get('MetadataOptions', {})
         if metadata_options.get('HttpTokens') != 'required':
             inst_findings.append({
@@ -136,7 +140,7 @@ def run_ec2_scan_region(region):
                 "remediation_suggestion": f"aws ec2 modify-instance-metadata-options --instance-id {instance_id} --http-tokens required --http-endpoint enabled --region {region}"
             })
 
-        # EC2-05: Public IPv4 Address Assigned
+        # Flagging instances assigned a direct public IPv4 address
         if instance.get('PublicIpAddress'):
             inst_findings.append({
                 "resource_name": display_name,
@@ -148,7 +152,7 @@ def run_ec2_scan_region(region):
                 "remediation_suggestion": f"Relocate instance '{instance_id}' to a private subnet behind a NAT Gateway or load balancer."
             })
 
-        # EC2-06: Unencrypted Attached EBS Volumes
+        # Checking attached EBS block volumes for encryption at rest
         for bdm in instance.get('BlockDeviceMappings', []):
             ebs_info = bdm.get('Ebs', {})
             volume_id = ebs_info.get('VolumeId')
@@ -169,7 +173,7 @@ def run_ec2_scan_region(region):
                 except ClientError:
                     pass
 
-        # Baseline Compliant Record
+        # Adding a baseline advisory record if instance configuration is compliant
         if not inst_findings:
             inst_findings.append({
                 "resource_name": display_name,
@@ -185,16 +189,18 @@ def run_ec2_scan_region(region):
 
     return findings
 
+
 def lambda_handler(event, context):
+    # Fetching active regions and auditing EC2 resources across all regions in parallel
     regions = get_enabled_regions()
     all_findings = []
-    
+
     with ThreadPoolExecutor(max_workers=len(regions) or 1) as executor:
-        results = executor.map(run_ec2_scan_region, regions)
-        for res in results:
+        for res in executor.map(run_ec2_scan_region, regions):
             all_findings.extend(res)
 
     return all_findings
+
 
 if __name__ == "__main__":
     print(json.dumps(lambda_handler({}, None), indent=2))

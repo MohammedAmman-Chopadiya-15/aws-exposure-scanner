@@ -1,45 +1,40 @@
-# lambdas/auditor_apigateway/lambda_function.py
 import json
+import logging
 import boto3
 from concurrent.futures import ThreadPoolExecutor
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from regions import get_enabled_regions
 
-# Fast network timeout config to prevent lingering network I/O
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Setting aggressive timeouts to prevent slow API calls from stalling execution
 FAST_AWS_CONFIG = Config(
     connect_timeout=2,
     read_timeout=4,
     retries={'max_attempts': 1}
 )
 
+
 def scan_apigw_v2_region(apigwv2_client, region):
-    """
-    Audits Amazon API Gateway v2 (HTTP and WebSocket APIs) against:
-    - APIGW-01: Unauthenticated routes (AuthorizationType: NONE)
-    - APIGW-03: Default execute-api endpoint enabled (disableExecuteApiEndpoint: false)
-    - APIGW-04: Permissive wildcard CORS policy (Access-Control-Allow-Origin: *)
-    - APIGW-06: CloudWatch access logging disabled on deployment stages
-    """
     findings = []
+    
+    # Querying all HTTP and WebSocket APIs in the target region
     try:
         apis_resp = apigwv2_client.get_apis()
         for api in apis_resp.get('Items', []):
             api_id = api['ApiId']
             api_name = api.get('Name', api_id)
 
-            # -------------------------------------------------------------
-            # EXCLUSION FILTER: Skip scanner's own operational API Gateway
-            # -------------------------------------------------------------
+            # Skipping the scanner's own API Gateway to avoid self-auditing
             if api_name.startswith("exposure-scanner-"):
                 continue
 
             disable_execute_api = api.get('DisableExecuteApiEndpoint', False)
             api_findings = []
 
-            # -------------------------------------------------------------
-            # APIGW-03: DEFAULT EXECUTE-API ENDPOINT ENABLED
-            # -------------------------------------------------------------
+            # Checking if the default execute-api endpoint is left enabled
             if not disable_execute_api:
                 api_findings.append({
                     "resource_name": f"{api_name} ({api_id})",
@@ -51,9 +46,7 @@ def scan_apigw_v2_region(apigwv2_client, region):
                     "remediation_suggestion": f"aws apigatewayv2 update-api --api-id {api_id} --disable-execute-api-endpoint --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # APIGW-04: WILDCARD CORS POLICY
-            # -------------------------------------------------------------
+            # Checking for overly permissive wildcard origins in CORS settings
             cors_config = api.get('CorsConfiguration', {})
             allow_origins = cors_config.get('AllowOrigins', [])
             if '*' in allow_origins:
@@ -67,9 +60,7 @@ def scan_apigw_v2_region(apigwv2_client, region):
                     "remediation_suggestion": f"aws apigatewayv2 update-api --api-id {api_id} --cors-configuration AllowOrigins='[\"https://yourdomain.com\"]' --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # APIGW-01: UNAUTHENTICATED ROUTES
-            # -------------------------------------------------------------
+            # Inspecting individual routes for unauthenticated access
             try:
                 routes_resp = apigwv2_client.get_routes(ApiId=api_id)
                 for route in routes_resp.get('Items', []):
@@ -77,7 +68,7 @@ def scan_apigw_v2_region(apigwv2_client, region):
                     auth_type = route.get('AuthorizationType', 'NONE')
                     route_id = route.get('RouteId', '')
 
-                    # Skip OPTIONS preflight routes
+                    # Skipping CORS OPTIONS preflight routes
                     if not route_key.startswith('OPTIONS ') and auth_type == 'NONE':
                         api_findings.append({
                             "resource_name": f"{api_name} ({api_id})",
@@ -91,9 +82,7 @@ def scan_apigw_v2_region(apigwv2_client, region):
             except ClientError:
                 pass
 
-            # -------------------------------------------------------------
-            # APIGW-06: STAGE ACCESS LOGGING DISABLED
-            # -------------------------------------------------------------
+            # Verifying whether CloudWatch access logging is configured on active stages
             try:
                 stages_resp = apigwv2_client.get_stages(ApiId=api_id)
                 for stage in stages_resp.get('Items', []):
@@ -112,7 +101,7 @@ def scan_apigw_v2_region(apigwv2_client, region):
             except ClientError:
                 pass
 
-            # Baseline Compliant Record
+            # Adding a baseline advisory record if the API Gateway v2 checks pass
             if not api_findings:
                 api_findings.append({
                     "resource_name": f"{api_name} ({api_id})",
@@ -128,28 +117,22 @@ def scan_apigw_v2_region(apigwv2_client, region):
 
     except ClientError as e:
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing API Gateway v2 in region '{region}': {e}")
+            logger.error(f"Auditing API Gateway v2 failed in region '{region}': {e}")
 
     return findings
 
+
 def scan_apigw_v1_region(apigw_client, region):
-    """
-    Audits Amazon API Gateway v1 (REST APIs) against:
-    - APIGW-01: Unauthenticated methods (authorizationType: NONE)
-    - APIGW-02: Missing AWS WAF Web ACL on stages
-    - APIGW-05: Public EDGE/REGIONAL API without resource policy
-    - APIGW-06: CloudWatch execution logging disabled (loggingLevel: OFF)
-    """
     findings = []
+    
+    # Querying all REST APIs in the target region
     try:
         apis_resp = apigw_client.get_rest_apis()
         for api in apis_resp.get('items', []):
             api_id = api['id']
             api_name = api.get('name', api_id)
 
-            # -------------------------------------------------------------
-            # EXCLUSION FILTER: Skip scanner's own operational REST API
-            # -------------------------------------------------------------
+            # Skipping the scanner's own REST API to prevent recursive auditing
             if api_name.startswith("exposure-scanner-"):
                 continue
 
@@ -158,9 +141,7 @@ def scan_apigw_v1_region(apigw_client, region):
             policy = api.get('policy')
             api_findings = []
 
-            # -------------------------------------------------------------
-            # APIGW-05: PUBLIC ENDPOINT WITHOUT RESOURCE POLICY
-            # -------------------------------------------------------------
+            # Checking if public EDGE or REGIONAL endpoints lack restrictive resource policies
             if ('EDGE' in types or 'REGIONAL' in types) and not policy:
                 api_findings.append({
                     "resource_name": f"{api_name} ({api_id})",
@@ -172,11 +153,8 @@ def scan_apigw_v1_region(apigw_client, region):
                     "remediation_suggestion": f"aws apigateway update-rest-api --rest-api-id {api_id} --patch-operations op=replace,path=/policy,value='<RESTRICTIVE_POLICY_JSON>' --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # APIGW-01: UNAUTHENTICATED REST METHODS
-            # -------------------------------------------------------------
+            # Inspecting each resource method for missing authorization controls
             try:
-                # Using embed=['methods'] instructs AWS to populate authorizationType
                 resources_resp = apigw_client.get_resources(restApiId=api_id, embed=['methods'])
                 for res in resources_resp.get('items', []):
                     res_path = res.get('path', '/')
@@ -199,15 +177,13 @@ def scan_apigw_v1_region(apigw_client, region):
             except ClientError:
                 pass
 
-            # -------------------------------------------------------------
-            # APIGW-02 & APIGW-06: STAGE WAF & LOGGING SETTINGS
-            # -------------------------------------------------------------
+            # Auditing deployment stages for WAF protection and CloudWatch logging
             try:
                 stages_resp = apigw_client.get_stages(restApiId=api_id)
                 for stage in stages_resp.get('item', []):
                     stage_name = stage.get('stageName', 'prod')
 
-                    # APIGW-02: Missing WAF Web ACL
+                    # Checking if an AWS WAF Web ACL is attached to the stage
                     if not stage.get('webAclArn'):
                         api_findings.append({
                             "resource_name": f"{api_name} ({api_id})",
@@ -219,7 +195,7 @@ def scan_apigw_v1_region(apigw_client, region):
                             "remediation_suggestion": f"aws wafv2 associate-web-acl --web-acl-arn <WAF_WEB_ACL_ARN> --resource-arn <STAGE_ARN> --region {region}"
                         })
 
-                    # APIGW-06: CloudWatch Execution Logging Disabled
+                    # Checking if CloudWatch execution logging is enabled
                     method_settings = stage.get('methodSettings', {})
                     root_settings = method_settings.get('*/*', {})
                     logging_level = root_settings.get('loggingLevel', 'OFF')
@@ -236,7 +212,7 @@ def scan_apigw_v1_region(apigw_client, region):
             except ClientError:
                 pass
 
-            # Baseline Compliant Record
+            # Adding a baseline advisory record if REST API configuration is safe
             if not api_findings:
                 api_findings.append({
                     "resource_name": f"{api_name} ({api_id})",
@@ -252,19 +228,16 @@ def scan_apigw_v1_region(apigw_client, region):
 
     except ClientError as e:
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing REST APIs in region '{region}': {e}")
+            logger.error(f"Auditing REST APIs failed in region '{region}': {e}")
 
     return findings
 
+
 def scan_custom_domains_region(region):
-    """
-    Audits API Gateway Custom Domain Names against:
-    - APIGW-07: Missing Mutual TLS (mTLS) configuration
-    - APIGW-08: Insecure legacy TLS versions (TLS 1.0 / TLS 1.1)
-    """
     findings = []
     apigwv2 = boto3.client('apigatewayv2', region_name=region, config=FAST_AWS_CONFIG)
     
+    # Querying all configured custom domain names in the region
     try:
         domains_resp = apigwv2.get_domain_names()
         for dom in domains_resp.get('Items', []):
@@ -272,9 +245,7 @@ def scan_custom_domains_region(region):
             domain_configs = dom.get('DomainNameConfigurations', [])
             dom_findings = []
             
-            # -------------------------------------------------------------
-            # APIGW-07: MISSING MUTUAL TLS (mTLS)
-            # -------------------------------------------------------------
+            # Checking if Mutual TLS (mTLS) authentication is enforced
             mtls_config = dom.get('MutualTlsAuthentication')
             if not mtls_config or not mtls_config.get('TruststoreUri'):
                 dom_findings.append({
@@ -287,9 +258,7 @@ def scan_custom_domains_region(region):
                     "remediation_suggestion": f"aws apigatewayv2 update-domain-name --domain-name {domain_name} --mutual-tls-authentication TruststoreUri=s3://<BUCKET>/truststore.pem --region {region}"
                 })
 
-            # -------------------------------------------------------------
-            # APIGW-08: OUTDATED TLS POLICY (TLS 1.0 / 1.1)
-            # -------------------------------------------------------------
+            # Checking for legacy TLS security policies (TLS 1.0 or 1.1)
             for cfg in domain_configs:
                 sec_policy = cfg.get('SecurityPolicy', '')
                 if sec_policy in ['TLS_1_0', 'TLS_1_1']:
@@ -303,7 +272,7 @@ def scan_custom_domains_region(region):
                         "remediation_suggestion": f"aws apigatewayv2 update-domain-name --domain-name {domain_name} --domain-name-configurations SecurityPolicy=TLS_1_2 --region {region}"
                     })
 
-            # Baseline Compliant Record
+            # Adding a baseline advisory record if custom domain configuration is compliant
             if not dom_findings:
                 dom_findings.append({
                     "resource_name": f"Domain-{domain_name}",
@@ -318,14 +287,12 @@ def scan_custom_domains_region(region):
             findings.extend(dom_findings)
     except ClientError as e:
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing Custom Domains in region '{region}': {e}")
+            logger.error(f"Auditing custom domains failed in region '{region}': {e}")
 
     return findings
 
+
 def run_apigw_scan_region(region):
-    """
-    Executes all API Gateway audits for a specific region.
-    """
     apigwv2 = boto3.client('apigatewayv2', region_name=region, config=FAST_AWS_CONFIG)
     apigwv1 = boto3.client('apigateway', region_name=region, config=FAST_AWS_CONFIG)
 
@@ -335,20 +302,18 @@ def run_apigw_scan_region(region):
     findings.extend(scan_custom_domains_region(region))
     return findings
 
+
 def lambda_handler(event, context):
-    """
-    Lambda execution handler. Executes regional audits in parallel across worker threads.
-    """
+    # Fetching active regions and auditing API Gateway resources in parallel
     regions = get_enabled_regions()
     all_findings = []
     
-    # Run all regional queries simultaneously
     with ThreadPoolExecutor(max_workers=len(regions) or 1) as executor:
-        results = executor.map(run_apigw_scan_region, regions)
-        for res in results:
+        for res in executor.map(run_apigw_scan_region, regions):
             all_findings.extend(res)
 
     return all_findings
+
 
 if __name__ == "__main__":
     print(json.dumps(lambda_handler({}, None), indent=2))

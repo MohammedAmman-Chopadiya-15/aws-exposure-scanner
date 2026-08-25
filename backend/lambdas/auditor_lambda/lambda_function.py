@@ -1,10 +1,13 @@
-# auditor_lambda.py
 import json
+import logging
 import boto3
 from botocore.exceptions import ClientError
 from regions import get_enabled_regions
 
-# Known deprecated and end-of-life runtimes
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Tracking runtimes that have reached end-of-life or deprecation
 DEPRECATED_RUNTIMES = {
     "python2.7", "python3.6", "python3.7", "python3.8", "python3.9",
     "nodejs10.x", "nodejs12.x", "nodejs14.x", "nodejs16.x", "nodejs18.x",
@@ -14,15 +17,13 @@ DEPRECATED_RUNTIMES = {
     "go1.x"
 }
 
+
 def run_lambda_scan_region(region):
-    """
-    Audits AWS Lambda functions and configuration parameters in a single region.
-    Returns flat finding dictionaries mapped to the schema expected by orchestrator.py.
-    """
     lambda_client = boto3.client('lambda', region_name=region)
     iam_client = boto3.client('iam')
     findings = []
 
+    # Paginating through all Lambda functions in the target region
     try:
         paginator = lambda_client.get_paginator('list_functions')
         for page in paginator.paginate():
@@ -33,9 +34,7 @@ def run_lambda_scan_region(region):
                 role_arn = fn.get('Role', '')
                 func_findings = []
 
-                # =============================================================
-                # CHECK 1: PUBLIC FUNCTION URLS (AuthType: NONE)
-                # =============================================================
+                # Checking for unauthenticated public Function URLs
                 try:
                     url_configs = lambda_client.list_function_url_configs(FunctionName=fn_name)
                     for cfg in url_configs.get('FunctionUrlConfigs', []):
@@ -52,9 +51,7 @@ def run_lambda_scan_region(region):
                 except ClientError:
                     pass
 
-                # =============================================================
-                # CHECK 2: PUBLIC RESOURCE POLICIES (Principal: *)
-                # =============================================================
+                # Inspecting the resource policy for unrestricted wildcard access
                 try:
                     policy_resp = lambda_client.get_policy(FunctionName=fn_name)
                     policy_doc = json.loads(policy_resp.get('Policy', '{}'))
@@ -80,13 +77,11 @@ def run_lambda_scan_region(region):
                                 "remediation_suggestion": f"aws lambda remove-permission --function-name {fn_name} --statement-id {sid} --region {region}"
                             })
                 except ClientError as e:
-                    # ResourceNotFoundException is raised when no resource policy exists
+                    # Catching cases where no resource policy is attached
                     if e.response['Error']['Code'] != 'ResourceNotFoundException':
                         pass
 
-                # =============================================================
-                # CHECK 3: OVERPRIVILEGED EXECUTION ROLE (AdministratorAccess)
-                # =============================================================
+                # Checking if the function execution role has AdministratorAccess attached
                 if role_arn:
                     role_name = role_arn.split('/')[-1]
                     try:
@@ -105,9 +100,7 @@ def run_lambda_scan_region(region):
                     except ClientError:
                         pass
 
-                # =============================================================
-                # CHECK 4: DEPRECATED / OUTDATED RUNTIME
-                # =============================================================
+                # Flagging functions running on deprecated or unsupported runtimes
                 if runtime in DEPRECATED_RUNTIMES:
                     func_findings.append({
                         "resource_name": fn_name,
@@ -119,9 +112,7 @@ def run_lambda_scan_region(region):
                         "remediation_suggestion": f"aws lambda update-function-configuration --function-name {fn_name} --runtime python3.12 --region {region}"
                     })
 
-                # =============================================================
-                # CHECK 5: ENVIRONMENT VARIABLES ENCRYPTION (KMS CMK)
-                # =============================================================
+                # Checking if environment variables rely on the default KMS key instead of a CMK
                 env_vars = fn.get('Environment', {}).get('Variables', {})
                 kms_key = fn.get('KMSKeyArn')
                 if env_vars and not kms_key:
@@ -135,9 +126,7 @@ def run_lambda_scan_region(region):
                         "remediation_suggestion": f"aws lambda update-function-configuration --function-name {fn_name} --kms-key-arn <CUSTOMER_MANAGED_KEY_ARN> --region {region}"
                     })
 
-                # =============================================================
-                # CHECK 6: FUNCTION OUTSIDE VPC ISOLATION
-                # =============================================================
+                # Verifying whether the function is deployed inside a VPC
                 vpc_config = fn.get('VpcConfig', {})
                 subnet_ids = vpc_config.get('SubnetIds', [])
                 if not subnet_ids:
@@ -151,9 +140,7 @@ def run_lambda_scan_region(region):
                         "remediation_suggestion": f"aws lambda update-function-configuration --function-name {fn_name} --vpc-config SubnetIds=<SUBNET_IDS>,SecurityGroupIds=<SG_ID> --region {region}"
                     })
 
-                # =============================================================
-                # CHECK 7: ACTIVE TRACING (AWS X-RAY) DISABLED
-                # =============================================================
+                # Checking if active AWS X-Ray tracing is enabled
                 tracing_mode = fn.get('TracingConfig', {}).get('Mode')
                 if tracing_mode != 'Active':
                     func_findings.append({
@@ -166,9 +153,7 @@ def run_lambda_scan_region(region):
                         "remediation_suggestion": f"aws lambda update-function-configuration --function-name {fn_name} --tracing-config Mode=Active --region {region}"
                     })
 
-                # =============================================================
-                # BASELINE: COMPLIANT RECORD REGISTRATION
-                # =============================================================
+                # Adding a baseline advisory record if no issues were identified
                 if not func_findings:
                     func_findings.append({
                         "resource_name": fn_name,
@@ -183,22 +168,21 @@ def run_lambda_scan_region(region):
                 findings.extend(func_findings)
 
     except ClientError as e:
+        # Logging unexpected errors while skipping expected permission issues
         if "UnauthorizedOperation" not in str(e):
-            print(f"[ERROR] Auditing Lambda in region '{region}': {e}")
+            logger.error(f"Auditing Lambda in region '{region}' failed: {e}")
 
     return findings
 
+
 def lambda_handler(event, context):
-    """
-    Entry point for the AWS Lambda auditor invocation.
-    Discovers enabled regions and aggregates findings across all regions.
-    """
+    # Discovering enabled regions and aggregating audit findings across all of them
     regions = get_enabled_regions()
     all_findings = []
     for r in regions:
         all_findings.extend(run_lambda_scan_region(r))
     return all_findings
 
+
 if __name__ == "__main__":
-    import json
     print(json.dumps(lambda_handler({}, None), indent=2))

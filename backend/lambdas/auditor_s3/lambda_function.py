@@ -1,26 +1,30 @@
-# lambdas/auditor_s3/lambda_function.py
 import json
+import logging
 import boto3
 from botocore.exceptions import ClientError
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 def run_s3_scan():
     s3_client = boto3.client('s3')
     findings = []
 
+    # Fetching all existing S3 buckets across the account
     try:
         response = s3_client.list_buckets()
         buckets = response.get('Buckets', [])
     except ClientError as e:
-        print(f"[ERROR] Listing S3 buckets: {e}")
+        logger.error(f"Failed listing S3 buckets: {e}")
         return findings
 
+    # Iterating through each bucket to run individual security checks
     for bucket in buckets:
         bucket_name = bucket['Name']
         bucket_findings = []
 
-        # ---------------------------------------------------------------------
-        # 1. CRITICAL: PUBLIC BUCKET POLICY
-        # ---------------------------------------------------------------------
+        # Checking if the bucket policy allows public read or write access
         try:
             policy_status = s3_client.get_bucket_policy_status(Bucket=bucket_name)
             if policy_status.get('PolicyStatus', {}).get('IsPublic', False):
@@ -36,9 +40,7 @@ def run_s3_scan():
         except ClientError:
             pass
 
-        # ---------------------------------------------------------------------
-        # 2. HIGH: OBJECT OWNERSHIP / ACL CONTROLS
-        # ---------------------------------------------------------------------
+        # Verifying whether Object Ownership is enforced to disable legacy ACLs
         try:
             ownership = s3_client.get_bucket_ownership_controls(Bucket=bucket_name)
             rules = ownership.get('OwnershipControls', {}).get('Rules', [])
@@ -63,16 +65,13 @@ def run_s3_scan():
                 "remediation_suggestion": f"aws s3api put-bucket-ownership-controls --bucket {bucket_name} --ownership-controls Rules=[{{ObjectOwnership=BucketOwnerEnforced}}]"
             })
 
-        # ---------------------------------------------------------------------
-        # 3. HIGH: ENFORCE SECURE TRANSPORT (HTTPS / TLS IN TRANSIT)
-        # ---------------------------------------------------------------------
+        # Checking for an explicit policy statement enforcing HTTPS in transit
         has_secure_transport_policy = False
         try:
             policy_resp = s3_client.get_bucket_policy(Bucket=bucket_name)
             policy_json = json.loads(policy_resp.get('Policy', '{}'))
             for stmt in policy_json.get('Statement', []):
                 condition = stmt.get('Condition', {})
-                # Check for Deny statements where aws:SecureTransport is false
                 if stmt.get('Effect') == 'Deny':
                     bool_cond = condition.get('Bool', {})
                     if bool_cond.get('aws:SecureTransport') in ['false', False]:
@@ -92,9 +91,7 @@ def run_s3_scan():
                 "remediation_suggestion": f"Attach a Deny policy with Condition: {{'Bool': {{'aws:SecureTransport': 'false'}}}} to bucket '{bucket_name}'."
             })
 
-        # ---------------------------------------------------------------------
-        # 4. HIGH: BLOCK PUBLIC ACCESS (BPA)
-        # ---------------------------------------------------------------------
+        # Confirming all four Block Public Access settings are turned on
         is_public_blocked = False
         try:
             pab = s3_client.get_public_access_block(Bucket=bucket_name)
@@ -116,9 +113,7 @@ def run_s3_scan():
                 "remediation_suggestion": f"aws s3api put-public-access-block --bucket {bucket_name} --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
             })
 
-        # ---------------------------------------------------------------------
-        # 5. MEDIUM: SERVER-SIDE ENCRYPTION (SSE) AT REST
-        # ---------------------------------------------------------------------
+        # Ensuring default server-side encryption at rest is configured
         try:
             s3_client.get_bucket_encryption(Bucket=bucket_name)
         except ClientError as e:
@@ -133,9 +128,7 @@ def run_s3_scan():
                     "remediation_suggestion": f"aws s3api put-bucket-encryption --bucket {bucket_name} --server-side-encryption-configuration '{{\"Rules\": [{{\"ApplyServerSideEncryptionByDefault\": {{\"SSEAlgorithm\": \"AES256\"}}}}]}}'"
                 })
 
-        # ---------------------------------------------------------------------
-        # 6. MEDIUM: BUCKET VERSIONING
-        # ---------------------------------------------------------------------
+        # Checking if versioning is active to protect against accidental deletions
         try:
             version_resp = s3_client.get_bucket_versioning(Bucket=bucket_name)
             if version_resp.get('Status') != 'Enabled':
@@ -151,9 +144,7 @@ def run_s3_scan():
         except ClientError:
             pass
 
-        # ---------------------------------------------------------------------
-        # 7. LOW: SERVER ACCESS LOGGING
-        # ---------------------------------------------------------------------
+        # Verifying whether server access logging is enabled for audit trails
         try:
             logging_resp = s3_client.get_bucket_logging(Bucket=bucket_name)
             if not logging_resp.get('LoggingEnabled'):
@@ -169,9 +160,7 @@ def run_s3_scan():
         except ClientError:
             pass
 
-        # ---------------------------------------------------------------------
-        # 8. LOW: LIFECYCLE MANAGEMENT CONFIGURATION
-        # ---------------------------------------------------------------------
+        # Checking if lifecycle rules exist to manage object retention
         try:
             lifecycle_resp = s3_client.get_bucket_lifecycle_configuration(Bucket=bucket_name)
             if not lifecycle_resp.get('Rules'):
@@ -196,9 +185,7 @@ def run_s3_scan():
                     "remediation_suggestion": f"aws s3api put-bucket-lifecycle-configuration --bucket {bucket_name} --lifecycle-configuration file://lifecycle.json"
                 })
 
-        # ---------------------------------------------------------------------
-        # 9. ADVISORY: FULLY COMPLIANT BASELINE
-        # ---------------------------------------------------------------------
+        # Marking the bucket compliant if no vulnerabilities were detected
         if not bucket_findings:
             bucket_findings.append({
                 "resource_name": bucket_name,
@@ -214,8 +201,10 @@ def run_s3_scan():
 
     return findings
 
+
 def lambda_handler(event, context):
     return run_s3_scan()
+
 
 if __name__ == "__main__":
     print(json.dumps(lambda_handler({}, None), indent=2))
