@@ -1,17 +1,17 @@
-# s3_lab.tf
-
+# Generating a random hex suffix to ensure unique bucket names
 resource "random_id" "bucket_suffix" {
   count       = var.deploy_s3 ? 1 : 0
   byte_length = 4
 }
 
-# Dedicated audit log destination bucket (Needed for compliant S3 access logging)
+# Creating dedicated audit logging destination bucket
 resource "aws_s3_bucket" "audit_logs" {
   count         = var.deploy_s3 ? 1 : 0
   bucket        = "msc-lab-${random_id.bucket_suffix[0].hex}-audit-logs"
   force_destroy = true
 }
 
+# Enforcing bucket owner permissions on audit logs
 resource "aws_s3_bucket_ownership_controls" "audit_logs_ownership" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.audit_logs[0].id
@@ -20,6 +20,7 @@ resource "aws_s3_bucket_ownership_controls" "audit_logs_ownership" {
   }
 }
 
+# Locking down public access on audit logging bucket
 resource "aws_s3_bucket_public_access_block" "audit_logs_bpa" {
   count                   = var.deploy_s3 ? 1 : 0
   bucket                  = aws_s3_bucket.audit_logs[0].id
@@ -29,19 +30,16 @@ resource "aws_s3_bucket_public_access_block" "audit_logs_bpa" {
   restrict_public_buckets = true
 }
 
-# =====================================================================
-# LONDON REGION (eu-west-2) BUCKETS
-# =====================================================================
+# Scenario 1: Compliant Baseline Bucket [London] (Zero Exposure)
 
-# ---------------------------------------------------------------------
-# BUCKET 1: PERFECT (Completely Compliant - ADVISORY: 0.0) [London]
-# ---------------------------------------------------------------------
+# Creating fully hardened London S3 bucket
 resource "aws_s3_bucket" "perfect" {
   count         = var.deploy_s3 ? 1 : 0
   bucket        = "msc-lab-${random_id.bucket_suffix[0].hex}-perfect"
   force_destroy = true
 }
 
+# Disabling legacy ACLs via bucket owner enforcement
 resource "aws_s3_bucket_ownership_controls" "perfect_ownership" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.perfect[0].id
@@ -50,6 +48,7 @@ resource "aws_s3_bucket_ownership_controls" "perfect_ownership" {
   }
 }
 
+# Blocking all public access settings
 resource "aws_s3_bucket_public_access_block" "perfect_bpa" {
   count                   = var.deploy_s3 ? 1 : 0
   bucket                  = aws_s3_bucket.perfect[0].id
@@ -59,6 +58,7 @@ resource "aws_s3_bucket_public_access_block" "perfect_bpa" {
   restrict_public_buckets = true
 }
 
+# Enabling default AES-256 server-side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "perfect_crypto" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.perfect[0].id
@@ -69,6 +69,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "perfect_crypto" {
   }
 }
 
+# Enabling bucket object versioning
 resource "aws_s3_bucket_versioning" "perfect_versioning" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.perfect[0].id
@@ -77,6 +78,7 @@ resource "aws_s3_bucket_versioning" "perfect_versioning" {
   }
 }
 
+# Forwarding server access logs to the audit destination bucket
 resource "aws_s3_bucket_logging" "perfect_logging" {
   count         = var.deploy_s3 ? 1 : 0
   bucket        = aws_s3_bucket.perfect[0].id
@@ -84,6 +86,7 @@ resource "aws_s3_bucket_logging" "perfect_logging" {
   target_prefix = "perfect-logs/"
 }
 
+# Configuring lifecycle expiration rules for noncurrent object versions
 resource "aws_s3_bucket_lifecycle_configuration" "perfect_lifecycle" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.perfect[0].id
@@ -100,6 +103,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "perfect_lifecycle" {
   }
 }
 
+# Enforcing TLS encrypted transit across all S3 requests
 resource "aws_s3_bucket_policy" "perfect_secure_transport" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.perfect[0].id
@@ -125,15 +129,16 @@ resource "aws_s3_bucket_policy" "perfect_secure_transport" {
   })
 }
 
-# ---------------------------------------------------------------------
-# BUCKET 2: LOW SEVERITY (Missing Lifecycle & Logging - Highest: LOW / 3.2) [London]
-# ---------------------------------------------------------------------
+# Scenario 2: Low Risk Bucket [London] (Missing Lifecycle Rules & Access Logging)
+
+# Creating encrypted versioned bucket without access logging
 resource "aws_s3_bucket" "low" {
   count         = var.deploy_s3 ? 1 : 0
   bucket        = "msc-lab-${random_id.bucket_suffix[0].hex}-low"
   force_destroy = true
 }
 
+# Enforcing bucket ownership controls
 resource "aws_s3_bucket_ownership_controls" "low_ownership" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.low[0].id
@@ -142,6 +147,7 @@ resource "aws_s3_bucket_ownership_controls" "low_ownership" {
   }
 }
 
+# Blocking all public access permissions
 resource "aws_s3_bucket_public_access_block" "low_bpa" {
   count                   = var.deploy_s3 ? 1 : 0
   bucket                  = aws_s3_bucket.low[0].id
@@ -151,6 +157,7 @@ resource "aws_s3_bucket_public_access_block" "low_bpa" {
   restrict_public_buckets = true
 }
 
+# Enabling default encryption at rest
 resource "aws_s3_bucket_server_side_encryption_configuration" "low_crypto" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.low[0].id
@@ -161,6 +168,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "low_crypto" {
   }
 }
 
+# Enabling bucket versioning
 resource "aws_s3_bucket_versioning" "low_versioning" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.low[0].id
@@ -169,6 +177,7 @@ resource "aws_s3_bucket_versioning" "low_versioning" {
   }
 }
 
+# Attaching HTTPS enforcement policy
 resource "aws_s3_bucket_policy" "low_secure_transport" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.low[0].id
@@ -187,15 +196,16 @@ resource "aws_s3_bucket_policy" "low_secure_transport" {
   })
 }
 
-# ---------------------------------------------------------------------
-# BUCKET 3: MEDIUM SEVERITY (Versioning Suspended - Highest: MEDIUM / 4.8) [London]
-# ---------------------------------------------------------------------
+# Scenario 3: Medium Risk Bucket [London] (Versioning Suspended)
+
+# Creating bucket with suspended versioning state
 resource "aws_s3_bucket" "medium" {
   count         = var.deploy_s3 ? 1 : 0
   bucket        = "msc-lab-${random_id.bucket_suffix[0].hex}-medium"
   force_destroy = true
 }
 
+# Disabling legacy ACL access
 resource "aws_s3_bucket_ownership_controls" "medium_ownership" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.medium[0].id
@@ -204,6 +214,7 @@ resource "aws_s3_bucket_ownership_controls" "medium_ownership" {
   }
 }
 
+# Blocking public access permissions
 resource "aws_s3_bucket_public_access_block" "medium_bpa" {
   count                   = var.deploy_s3 ? 1 : 0
   bucket                  = aws_s3_bucket.medium[0].id
@@ -213,6 +224,7 @@ resource "aws_s3_bucket_public_access_block" "medium_bpa" {
   restrict_public_buckets = true
 }
 
+# Enabling default encryption at rest
 resource "aws_s3_bucket_server_side_encryption_configuration" "medium_crypto" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.medium[0].id
@@ -223,6 +235,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "medium_crypto" {
   }
 }
 
+# Setting bucket versioning to suspended
 resource "aws_s3_bucket_versioning" "medium_versioning" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.medium[0].id
@@ -231,6 +244,7 @@ resource "aws_s3_bucket_versioning" "medium_versioning" {
   }
 }
 
+# Enforcing secure transport over HTTPS
 resource "aws_s3_bucket_policy" "medium_secure_transport" {
   count  = var.deploy_s3 ? 1 : 0
   bucket = aws_s3_bucket.medium[0].id
@@ -249,14 +263,9 @@ resource "aws_s3_bucket_policy" "medium_secure_transport" {
   })
 }
 
+# Scenario 4: High Risk Bucket [N. Virginia] (Block Public Access Disabled & Missing TLS Policy)
 
-# =====================================================================
-# N. VIRGINIA REGION (us-east-1) BUCKETS
-# =====================================================================
-
-# ---------------------------------------------------------------------
-# BUCKET 4: HIGH SEVERITY (BPA Disabled, Legacy ACLs, No TLS Policy - Highest: HIGH / 8.2) [N. Virginia]
-# ---------------------------------------------------------------------
+# Deploying unprotected bucket in us-east-1
 resource "aws_s3_bucket" "high" {
   provider      = aws.us_east_1
   count         = var.deploy_s3 ? 1 : 0
@@ -264,6 +273,7 @@ resource "aws_s3_bucket" "high" {
   force_destroy = true
 }
 
+# Disabling all Block Public Access controls
 resource "aws_s3_bucket_public_access_block" "high_bpa" {
   provider                = aws.us_east_1
   count                   = var.deploy_s3 ? 1 : 0
@@ -274,9 +284,9 @@ resource "aws_s3_bucket_public_access_block" "high_bpa" {
   restrict_public_buckets = false
 }
 
-# ---------------------------------------------------------------------
-# BUCKET 5: CRITICAL SEVERITY (Anonymous Public Read Policy - Highest: CRITICAL / 9.8) [N. Virginia]
-# ---------------------------------------------------------------------
+# Scenario 5: Critical Risk Bucket [N. Virginia] (Anonymous Public Read Policy Attached)
+
+# Deploying publicly readable bucket in us-east-1
 resource "aws_s3_bucket" "critical" {
   provider      = aws.us_east_1
   count         = var.deploy_s3 ? 1 : 0
@@ -284,6 +294,7 @@ resource "aws_s3_bucket" "critical" {
   force_destroy = true
 }
 
+# Disabling Block Public Access controls to permit public policies
 resource "aws_s3_bucket_public_access_block" "critical_bpa" {
   provider                = aws.us_east_1
   count                   = var.deploy_s3 ? 1 : 0
@@ -294,6 +305,7 @@ resource "aws_s3_bucket_public_access_block" "critical_bpa" {
   restrict_public_buckets = false
 }
 
+# Granting global anonymous read permissions to the public
 resource "aws_s3_bucket_policy" "critical_anonymous_policy" {
   provider = aws.us_east_1
   count    = var.deploy_s3 ? 1 : 0

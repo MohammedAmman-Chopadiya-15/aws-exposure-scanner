@@ -1,14 +1,6 @@
-# samples/apigateway_lab.tf
+# Scenario 1: Critical Risk HTTP API (Unauthenticated, Wildcard CORS, Default Endpoint)
 
-# =====================================================================
-# SCENARIO 1: CRITICAL RISK HTTP API (API Gateway v2)
-# Triggers:
-# - APIGW-01: Unauthenticated route (AuthorizationType: NONE) -> CRITICAL (9.5)
-# - APIGW-03: Default execute-api endpoint enabled -> HIGH (7.8)
-# - APIGW-04: Wildcard CORS origin (*) -> HIGH (7.8)
-# - APIGW-06: Stage access logging disabled -> MEDIUM (5.5)
-# Overall Severity: CRITICAL (9.5)
-# =====================================================================
+# Deploying a publicly exposed HTTP API with open CORS
 resource "aws_apigatewayv2_api" "critical_http_api" {
   count                        = var.deploy_apigateway ? 1 : 0
   name                         = "msc-lab-critical-http-api"
@@ -27,29 +19,25 @@ resource "aws_apigatewayv2_api" "critical_http_api" {
   }
 }
 
+# Setting up an unauthenticated public route
 resource "aws_apigatewayv2_route" "critical_http_route" {
   count              = var.deploy_apigateway ? 1 : 0
   api_id             = aws_apigatewayv2_api.critical_http_api[0].id
   route_key          = "GET /public-data"
-  authorization_type = "NONE" # Triggers APIGW-01 (CRITICAL: 9.5)
+  authorization_type = "NONE"
 }
 
+# Deploying default stage without access logging
 resource "aws_apigatewayv2_stage" "critical_http_stage" {
   count       = var.deploy_apigateway ? 1 : 0
   api_id      = aws_apigatewayv2_api.critical_http_api[0].id
   name        = "$default"
-  auto_deploy = true # Lacks access logging -> Triggers APIGW-06 (MEDIUM: 5.5)
+  auto_deploy = true
 }
 
-# =====================================================================
-# SCENARIO 2: HIGH RISK REST API (API Gateway v1)
-# Triggers:
-# - APIGW-02: Missing AWS WAF Web ACL on Stage -> HIGH (8.2)
-# - APIGW-05: Missing Resource Policy -> HIGH (7.5)
-# - APIGW-06: Execution logging disabled -> MEDIUM (5.5)
-# (Uses AWS_IAM auth so APIGW-01 is NOT triggered)
-# Overall Severity: HIGH (8.2)
-# =====================================================================
+# Scenario 2: High Risk REST API (Missing WAF & Resource Policy)
+
+# Deploying a REST API without a restrictive resource policy
 resource "aws_api_gateway_rest_api" "high_risk_rest_api" {
   count       = var.deploy_apigateway ? 1 : 0
   name        = "msc-lab-high-rest-api"
@@ -58,9 +46,10 @@ resource "aws_api_gateway_rest_api" "high_risk_rest_api" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
-  policy = "" # Triggers APIGW-05 (HIGH: 7.5)
+  policy = ""
 }
 
+# Adding a secure data resource path
 resource "aws_api_gateway_resource" "rest_resource" {
   count       = var.deploy_apigateway ? 1 : 0
   rest_api_id = aws_api_gateway_rest_api.high_risk_rest_api[0].id
@@ -68,14 +57,16 @@ resource "aws_api_gateway_resource" "rest_resource" {
   path_part   = "secure-data"
 }
 
+# Securing the GET method with IAM auth
 resource "aws_api_gateway_method" "rest_method_iam" {
   count         = var.deploy_apigateway ? 1 : 0
   rest_api_id   = aws_api_gateway_rest_api.high_risk_rest_api[0].id
   resource_id   = aws_api_gateway_resource.rest_resource[0].id
   http_method   = "GET"
-  authorization = "AWS_IAM" # Passes APIGW-01
+  authorization = "AWS_IAM"
 }
 
+# Attaching a mock backend integration
 resource "aws_api_gateway_integration" "rest_mock_integration" {
   count       = var.deploy_apigateway ? 1 : 0
   rest_api_id = aws_api_gateway_rest_api.high_risk_rest_api[0].id
@@ -88,6 +79,7 @@ resource "aws_api_gateway_integration" "rest_mock_integration" {
   }
 }
 
+# Triggering deployment on method or integration changes
 resource "aws_api_gateway_deployment" "rest_deployment" {
   count       = var.deploy_apigateway ? 1 : 0
   rest_api_id = aws_api_gateway_rest_api.high_risk_rest_api[0].id
@@ -109,91 +101,86 @@ resource "aws_api_gateway_deployment" "rest_deployment" {
   ]
 }
 
+# Deploying dev stage without attaching WAF or execution logging
 resource "aws_api_gateway_stage" "rest_stage" {
   count         = var.deploy_apigateway ? 1 : 0
   deployment_id = aws_api_gateway_deployment.rest_deployment[0].id
   rest_api_id   = aws_api_gateway_rest_api.high_risk_rest_api[0].id
-  stage_name    = "dev" # Triggers APIGW-02 (HIGH: 8.2) & APIGW-06 (MEDIUM: 5.5)
+  stage_name    = "dev"
 }
 
+# Scenario 3: Medium Risk HTTP API (Missing Stage Access Logs)
 
-# =====================================================================
-# SCENARIO 3: MEDIUM RISK HTTP API (API Gateway v2)
-# Triggers:
-# - APIGW-06: Stage access logging disabled -> MEDIUM (5.5)
-# (Disabled default endpoint, explicit CORS whitelist, AWS_IAM auth)
-# Overall Severity: MEDIUM (5.5)
-# =====================================================================
+# Deploying an HTTP API with disabled default endpoint and locked CORS
 resource "aws_apigatewayv2_api" "medium_http_api" {
   count                        = var.deploy_apigateway ? 1 : 0
   name                         = "msc-lab-medium-http-api"
   protocol_type                = "HTTP"
-  disable_execute_api_endpoint = true # Passes APIGW-03
+  disable_execute_api_endpoint = true
 
   cors_configuration {
-    allow_origins = ["https://app.securelab.internal"] # Passes APIGW-04
+    allow_origins = ["https://app.securelab.internal"]
     allow_methods = ["GET", "OPTIONS"]
     allow_headers = ["Authorization", "Content-Type"]
   }
 }
 
+# Protecting user profile route with IAM auth
 resource "aws_apigatewayv2_route" "medium_http_route" {
   count              = var.deploy_apigateway ? 1 : 0
   api_id             = aws_apigatewayv2_api.medium_http_api[0].id
   route_key          = "GET /user-profile"
-  authorization_type = "AWS_IAM" # Passes APIGW-01
+  authorization_type = "AWS_IAM"
 }
 
+# Deploying default stage without access logs
 resource "aws_apigatewayv2_stage" "medium_http_stage" {
   count       = var.deploy_apigateway ? 1 : 0
   api_id      = aws_apigatewayv2_api.medium_http_api[0].id
   name        = "$default"
-  auto_deploy = true # Triggers APIGW-06 (MEDIUM: 5.5)
+  auto_deploy = true
 }
 
-# =====================================================================
-# SCENARIO 4: COMPLIANT HTTP API (Zero Exposure - ADVISORY: 0.0)
-# Controls:
-# - Disabled default execute-api endpoint (Passes APIGW-03)
-# - Explicit CORS whitelist (Passes APIGW-04)
-# - AWS_IAM auth on data route (Passes APIGW-01)
-# - OPTIONS route unauthenticated (Exempted by auditor)
-# - CloudWatch access logging configured (Passes APIGW-06)
-# Overall Severity: ADVISORY (0.0)
-# =====================================================================
+# Scenario 4: Compliant Baseline HTTP API (Zero Exposure)
+
+# Creating CloudWatch log group for access logs
 resource "aws_cloudwatch_log_group" "compliant_api_logs" {
   count             = var.deploy_apigateway ? 1 : 0
   name              = "/aws/apigateway/msc-lab-compliant-http-api"
   retention_in_days = 7
 }
 
+# Deploying fully hardened HTTP API
 resource "aws_apigatewayv2_api" "compliant_http_api" {
   count                        = var.deploy_apigateway ? 1 : 0
   name                         = "msc-lab-compliant-http-api"
   protocol_type                = "HTTP"
-  disable_execute_api_endpoint = true # Passes APIGW-03
+  disable_execute_api_endpoint = true
 
   cors_configuration {
-    allow_origins = ["https://app.securelab.internal"] # Passes APIGW-04
+    allow_origins = ["https://app.securelab.internal"]
     allow_methods = ["GET", "OPTIONS"]
     allow_headers = ["Authorization", "Content-Type"]
   }
 }
 
+# Protecting orders route with IAM auth
 resource "aws_apigatewayv2_route" "compliant_orders_route" {
   count              = var.deploy_apigateway ? 1 : 0
   api_id             = aws_apigatewayv2_api.compliant_http_api[0].id
   route_key          = "GET /orders"
-  authorization_type = "AWS_IAM" # Passes APIGW-01
+  authorization_type = "AWS_IAM"
 }
 
+# Permitting unauthenticated OPTIONS preflight route
 resource "aws_apigatewayv2_route" "compliant_options_route" {
   count              = var.deploy_apigateway ? 1 : 0
   api_id             = aws_apigatewayv2_api.compliant_http_api[0].id
   route_key          = "OPTIONS /orders"
-  authorization_type = "NONE" # OPTIONS preflight route exempted in auditor
+  authorization_type = "NONE"
 }
 
+# Deploying stage with structured CloudWatch logging enabled
 resource "aws_apigatewayv2_stage" "compliant_http_stage" {
   count       = var.deploy_apigateway ? 1 : 0
   api_id      = aws_apigatewayv2_api.compliant_http_api[0].id

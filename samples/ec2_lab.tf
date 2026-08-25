@@ -1,8 +1,4 @@
-# ec2_lab.tf
-
-# ---------------------------------------------------------------------
-# DATA SOURCES: LONDON (eu-west-2)
-# ---------------------------------------------------------------------
+# Looking up default VPC and subnets in London (eu-west-2)
 data "aws_vpc" "london_default" {
   default = true
 }
@@ -23,9 +19,7 @@ data "aws_ami" "london_amazon_linux" {
   }
 }
 
-# ---------------------------------------------------------------------
-# DATA SOURCES: N. VIRGINIA (us-east-1)
-# ---------------------------------------------------------------------
+# Looking up default VPC and subnets in N. Virginia (us-east-1)
 data "aws_vpc" "us_east_1_default" {
   provider = aws.us_east_1
   default  = true
@@ -49,13 +43,9 @@ data "aws_ami" "us_east_1_amazon_linux" {
   }
 }
 
-# =====================================================================
-# LONDON REGION (eu-west-2) EC2 INSTANCES
-# =====================================================================
+# Scenario 1: Critical Risk EC2 (SSH, DB Ingress, IMDSv1, Public IP, Unencrypted EBS)
 
-# ---------------------------------------------------------------------
-# SCENARIO 1: CRITICAL RISK EC2 (SSH, DB Ingress, IMDSv1, Public IP, Unencrypted)
-# ---------------------------------------------------------------------
+# Creating a security group with public SSH and MySQL ingress
 resource "aws_security_group" "ec2_critical_london_sg" {
   count       = var.deploy_ec2 ? 1 : 0
   name        = "msc-lab-london-critical-sg"
@@ -84,6 +74,7 @@ resource "aws_security_group" "ec2_critical_london_sg" {
   }
 }
 
+# Deploying an instance with public IP, IMDSv1, and unencrypted root volume
 resource "aws_instance" "ec2_critical_london" {
   count                       = var.deploy_ec2 ? 1 : 0
   ami                         = data.aws_ami.london_amazon_linux.id
@@ -94,11 +85,11 @@ resource "aws_instance" "ec2_critical_london" {
 
   metadata_options {
     http_endpoint = "enabled"
-    http_tokens   = "optional" # Triggers EC2-04 (IMDSv1)
+    http_tokens   = "optional"
   }
 
   root_block_device {
-    encrypted   = false # Triggers EC2-06
+    encrypted   = false
     volume_type = "gp3"
     volume_size = 8
   }
@@ -108,9 +99,9 @@ resource "aws_instance" "ec2_critical_london" {
   }
 }
 
-# ---------------------------------------------------------------------
-# SCENARIO 2: PERFECT / COMPLIANT EC2 (Zero Exposure - ADVISORY: 0.0)
-# ---------------------------------------------------------------------
+# Scenario 2: Compliant Baseline EC2 (Zero Exposure)
+
+# Creating a locked-down security group allowing internal VPC traffic only
 resource "aws_security_group" "ec2_perfect_london_sg" {
   count       = var.deploy_ec2 ? 1 : 0
   name        = "msc-lab-london-perfect-sg"
@@ -132,6 +123,7 @@ resource "aws_security_group" "ec2_perfect_london_sg" {
   }
 }
 
+# Deploying a hardened private instance with IMDSv2 and encrypted storage
 resource "aws_instance" "ec2_perfect_london" {
   count                       = var.deploy_ec2 ? 1 : 0
   ami                         = data.aws_ami.london_amazon_linux.id
@@ -142,11 +134,11 @@ resource "aws_instance" "ec2_perfect_london" {
 
   metadata_options {
     http_endpoint = "enabled"
-    http_tokens   = "required" # Compliant IMDSv2
+    http_tokens   = "required"
   }
 
   root_block_device {
-    encrypted   = true # Compliant EBS Encryption
+    encrypted   = true
     volume_type = "gp3"
     volume_size = 8
   }
@@ -156,9 +148,9 @@ resource "aws_instance" "ec2_perfect_london" {
   }
 }
 
-# ---------------------------------------------------------------------
-# SCENARIO 3: MEDIUM RISK EC2 (Internal only, IMDSv2, but Unencrypted EBS)
-# ---------------------------------------------------------------------
+# Scenario 3: Medium Risk EC2 (Private, IMDSv2, but Unencrypted EBS)
+
+# Restricting ingress to internal port 80 traffic
 resource "aws_security_group" "ec2_medium_london_sg" {
   count       = var.deploy_ec2 ? 1 : 0
   name        = "msc-lab-london-medium-sg"
@@ -180,6 +172,7 @@ resource "aws_security_group" "ec2_medium_london_sg" {
   }
 }
 
+# Deploying private instance without root volume encryption
 resource "aws_instance" "ec2_medium_london" {
   count                       = var.deploy_ec2 ? 1 : 0
   ami                         = data.aws_ami.london_amazon_linux.id
@@ -194,7 +187,7 @@ resource "aws_instance" "ec2_medium_london" {
   }
 
   root_block_device {
-    encrypted   = false # Triggers EC2-06 (MEDIUM: 5.8)
+    encrypted   = false
     volume_type = "gp3"
     volume_size = 8
   }
@@ -204,13 +197,9 @@ resource "aws_instance" "ec2_medium_london" {
   }
 }
 
-# =====================================================================
-# N. VIRGINIA REGION (us-east-1) EC2 INSTANCES
-# =====================================================================
+# Scenario 4: High Risk EC2 (RDP Exposure & IMDSv1) [us-east-1]
 
-# ---------------------------------------------------------------------
-# SCENARIO 4: HIGH RISK EC2 (RDP Exposure & IMDSv1) [us-east-1]
-# ---------------------------------------------------------------------
+# Creating a security group with public RDP access
 resource "aws_security_group" "ec2_high_us_east_1_sg" {
   provider    = aws.us_east_1
   count       = var.deploy_ec2 ? 1 : 0
@@ -233,6 +222,7 @@ resource "aws_security_group" "ec2_high_us_east_1_sg" {
   }
 }
 
+# Deploying public instance in us-east-1 with IMDSv1 enabled
 resource "aws_instance" "ec2_high_us_east_1" {
   provider                    = aws.us_east_1
   count                       = var.deploy_ec2 ? 1 : 0
@@ -244,7 +234,7 @@ resource "aws_instance" "ec2_high_us_east_1" {
 
   metadata_options {
     http_endpoint = "enabled"
-    http_tokens   = "optional" # Triggers EC2-04 (HIGH: 7.8)
+    http_tokens   = "optional"
   }
 
   root_block_device {
