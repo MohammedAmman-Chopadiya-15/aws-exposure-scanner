@@ -116,9 +116,11 @@ def run_cloudfront_scan():
                 # CF-04: OUTDATED VIEWER TLS PROTOCOL
                 # -------------------------------------------------------------
                 viewer_cert = dist.get('ViewerCertificate', {})
+                is_default_cert = viewer_cert.get('CloudFrontDefaultCertificate', False)
                 min_protocol_version = viewer_cert.get('MinimumProtocolVersion', 'TLSv1')
 
-                if min_protocol_version in LEGACY_TLS_POLICIES:
+                # Only evaluate custom certificates (default cloudfront.net certificates enforce modern TLS automatically)
+                if not is_default_cert and min_protocol_version in LEGACY_TLS_POLICIES:
                     dist_findings.append({
                         "resource_name": display_name,
                         "service": "CLOUDFRONT",

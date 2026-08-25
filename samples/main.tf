@@ -76,3 +76,9 @@ variable "deploy_apigateway" {
   default     = false
   description = "Set to true to deploy API Gateway lab infrastructure"
 }
+
+variable "deploy_cloudfront" {
+  type        = bool
+  default     = false
+  description = "Set to true to deploy CloudFront lab infrastructure"
+}

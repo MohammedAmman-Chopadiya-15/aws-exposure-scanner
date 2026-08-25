@@ -15,7 +15,8 @@ AUDITOR_FUNCTIONS = [
     "exposure-scanner-auditor-rds",
     "exposure-scanner-auditor-iam",
     "exposure-scanner-auditor-lambda",
-    "exposure-scanner-auditor-apigateway"
+    "exposure-scanner-auditor-apigateway",
+    "exposure-scanner-auditor-cloudfront"
 ]
 
 def consolidate_and_score(raw_findings):
