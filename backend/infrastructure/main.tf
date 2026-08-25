@@ -16,7 +16,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# 1. IAM Execution Role for all Lambdas
+# Creating an IAM execution role shared across all auditor and orchestrator Lambdas
 resource "aws_iam_role" "lambda_exec_role" {
   name = "${var.app_name}-exec-role"
 
@@ -30,19 +30,19 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-# Attach AWS SecurityAudit managed policy
+# Attaching AWS SecurityAudit managed policy to grant read-only inspection access
 resource "aws_iam_role_policy_attachment" "security_audit_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
 }
 
-# Attach Basic Execution Role for CloudWatch Logs
+# Attaching basic execution permissions for writing CloudWatch logs
 resource "aws_iam_role_policy_attachment" "lambda_logs_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Policy allowing Orchestrator to invoke Auditor Lambdas
+# Defining an IAM policy allowing the orchestrator function to trigger auditor Lambdas
 resource "aws_iam_policy" "lambda_invoke_policy" {
   name        = "${var.app_name}-invoke-policy"
   description = "Allows orchestrator lambda to trigger service auditor lambdas"
@@ -57,12 +57,13 @@ resource "aws_iam_policy" "lambda_invoke_policy" {
   })
 }
 
+# Attaching the Lambda invocation policy to the shared execution role
 resource "aws_iam_role_policy_attachment" "invoke_policy_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = aws_iam_policy.lambda_invoke_policy.arn
 }
 
-# 2. Amazon API Gateway HTTP API
+# Provisioning the public HTTP API Gateway endpoint
 resource "aws_apigatewayv2_api" "http_api" {
   name          = "${var.app_name}-api"
   protocol_type = "HTTP"
@@ -74,14 +75,14 @@ resource "aws_apigatewayv2_api" "http_api" {
   }
 }
 
+# Configuring the default stage with automatic deployment enabled
 resource "aws_apigatewayv2_stage" "api_stage" {
   api_id      = aws_apigatewayv2_api.http_api.id
   name        = "$default"
   auto_deploy = true
 }
 
-# Automatically update VITE_API_URL in existing .env file to make deployment easier
-
+# Updating the frontend .env file with the newly generated API Gateway endpoint URL
 resource "null_resource" "update_frontend_env" {
   triggers = {
     api_url = aws_apigatewayv2_stage.api_stage.invoke_url

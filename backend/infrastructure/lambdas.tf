@@ -1,8 +1,4 @@
-# lambdas.tf
-
-# Discover all subdirectories inside ../lambdas matching "auditor_*"
-# -----------------------------------------------------------------------------
-
+# Discovering all auditor subdirectories under ../lambdas matching "auditor_*"
 locals {
   auditor_dirs = toset(distinct([
     for f in fileset("${path.module}/../lambdas", "auditor_*/*") :
@@ -10,9 +6,7 @@ locals {
   ]))
 }
 
-
-# Dynamic zip generation for all discovered auditor folders
-
+# Generating deployment zip packages dynamically for each discovered auditor
 data "archive_file" "dynamic_auditor_zips" {
   for_each    = local.auditor_dirs
   type        = "zip"
@@ -20,18 +14,16 @@ data "archive_file" "dynamic_auditor_zips" {
   output_path = "${path.module}/zips/${each.value}.zip"
 }
 
-# Explicit zip for the orchestrator (since it requires unique env vars & timeout)
+# Packaging the orchestrator function separately to inject API key configuration
 data "archive_file" "zip_orchestrator" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/orchestrator"
   output_path = "${path.module}/zips/orchestrator.zip"
 }
 
-# Automatically provisions a Lambda resource per discovered folder
-
+# Provisioning individual auditor Lambda functions for each discovered directory
 resource "aws_lambda_function" "dynamic_auditors" {
   for_each         = local.auditor_dirs
-  # Converts "auditor_s3" -> "${var.app_name}-auditor-s3"
   function_name    = "${var.app_name}-${replace(each.value, "_", "-")}"
   role             = aws_iam_role.lambda_exec_role.arn
   handler          = "lambda_function.lambda_handler"
@@ -41,9 +33,7 @@ resource "aws_lambda_function" "dynamic_auditors" {
   source_code_hash = data.archive_file.dynamic_auditor_zips[each.value].output_base64sha256
 }
 
-
-# ORCHESTRATOR LAMBDA FUNCTION
-
+# Deploying the primary orchestrator function responsible for coordinating auditor scans
 resource "aws_lambda_function" "orchestrator" {
   function_name    = "${var.app_name}-orchestrator"
   role             = aws_iam_role.lambda_exec_role.arn
@@ -60,9 +50,7 @@ resource "aws_lambda_function" "orchestrator" {
   }
 }
 
-
-# API GATEWAY INTEGRATION & PERMISSIONS
-
+# Integrating the orchestrator Lambda with API Gateway via proxy routing
 resource "aws_apigatewayv2_integration" "api_integration" {
   api_id                 = aws_apigatewayv2_api.http_api.id
   integration_type       = "AWS_PROXY"
@@ -70,12 +58,14 @@ resource "aws_apigatewayv2_integration" "api_integration" {
   payload_format_version = "2.0"
 }
 
+# Routing incoming GET /api/scan requests to the orchestrator integration
 resource "aws_apigatewayv2_route" "scan_route" {
   api_id    = aws_apigatewayv2_api.http_api.id
   route_key = "GET /api/scan"
   target    = "integrations/${aws_apigatewayv2_integration.api_integration.id}"
 }
 
+# Granting API Gateway permission to invoke the orchestrator function
 resource "aws_lambda_permission" "apigw_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
