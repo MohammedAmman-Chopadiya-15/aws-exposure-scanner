@@ -1,0 +1,298 @@
+{
+    "findings":  [
+                     {
+                         "resource_name":  "Root-Account",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] AWS Root Account baseline audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Root account meets baseline MFA and credential standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-Admin",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027Admin\u0027 is directly attached to \u0027AdministratorAccess\u0027 (Full *:*).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.0,
+                                                         "remediation_suggestion":  "aws iam detach-user-policy --user-name Admin --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-cloud-security-scanner-root",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "LOW",
+                         "final_risk_score":  3.2,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027cloud-security-scanner-root\u0027 has direct user-level policies attached rather than inheriting from IAM Groups.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "Migrate permissions for \u0027cloud-security-scanner-root\u0027 into dedicated IAM Groups and assign group membership."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-high-admin-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-high-admin-user\u0027 is directly attached to \u0027AdministratorAccess\u0027 (Full *:*).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.0,
+                                                         "remediation_suggestion":  "aws iam detach-user-policy --user-name msc-lab-high-admin-user --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-low-multiple-keys-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "LOW",
+                         "final_risk_score":  2.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-low-multiple-keys-user\u0027 has 2 active access keys simultaneously.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.8,
+                                                         "remediation_suggestion":  "Delete redundant access keys for \u0027msc-lab-low-multiple-keys-user\u0027 leaving a single active key."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-medium-console-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-medium-console-user\u0027 has console password access enabled without MFA configured.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.8,
+                                                         "remediation_suggestion":  "Enforce MFA registration for user \u0027msc-lab-medium-console-user\u0027 before console login is permitted."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-perfect-read-only-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-perfect-read-only-user\u0027 identified and audited.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "User complies with baseline identity standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-iam",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-iam\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-iam --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-iam\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-iam --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-apigateway",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-apigateway\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-apigateway --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-apigateway\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-apigateway --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-rds",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-rds\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-rds --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-rds\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-rds --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-cloudfront",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-cloudfront\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-cloudfront --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-cloudfront\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-cloudfront --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-lambda\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-lambda --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-s3",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-s3\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-s3 --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-s3\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-s3 --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-orchestrator",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.3,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 stores environment variables using default AWS-managed KMS key rather than a CMK.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.0,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --kms-key-arn \u003cCUSTOMER_MANAGED_KEY_ARN\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-ec2",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-ec2\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-ec2 --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-ec2\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-ec2 --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     }
+                 ]
+}

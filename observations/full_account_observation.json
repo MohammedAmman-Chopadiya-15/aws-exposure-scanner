@@ -1,0 +1,1076 @@
+{
+    "findings":  [
+                     {
+                         "resource_name":  "msc-lab-0dc808a4-cf-logs",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  5,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Object Ownership set to \u0027ACLs Enabled\u0027, allowing legacy permissions.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-ownership-controls --bucket msc-lab-0dc808a4-cf-logs --ownership-controls Rules=[{ObjectOwnership=BucketOwnerEnforced}]"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket policy does not enforce TLS in transit (allows insecure HTTP requests).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Attach a Deny policy with Condition: {\u0027Bool\u0027: {\u0027aws:SecureTransport\u0027: \u0027false\u0027}} to bucket \u0027msc-lab-0dc808a4-cf-logs\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-0dc808a4-cf-logs --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-0dc808a4-cf-logs --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-0dc808a4-cf-logs/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-0dc808a4-cf-logs --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-0dc808a4-cf-origin",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  4,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.25,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Bucket policy does not enforce TLS in transit (allows insecure HTTP requests).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Attach a Deny policy with Condition: {\u0027Bool\u0027: {\u0027aws:SecureTransport\u0027: \u0027false\u0027}} to bucket \u0027msc-lab-0dc808a4-cf-origin\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-0dc808a4-cf-origin --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-0dc808a4-cf-origin --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-0dc808a4-cf-origin/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-0dc808a4-cf-origin --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-audit-logs",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  4,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.25,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Bucket policy does not enforce TLS in transit (allows insecure HTTP requests).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Attach a Deny policy with Condition: {\u0027Bool\u0027: {\u0027aws:SecureTransport\u0027: \u0027false\u0027}} to bucket \u0027msc-lab-c66ca3ec-audit-logs\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-c66ca3ec-audit-logs --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-c66ca3ec-audit-logs --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-c66ca3ec-audit-logs/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-c66ca3ec-audit-logs --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-critical",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  6,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  10.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Active Bucket Policy allows public read or write access globally.",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.8,
+                                                         "remediation_suggestion":  "aws s3api delete-bucket-policy --bucket msc-lab-c66ca3ec-critical"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket policy does not enforce TLS in transit (allows insecure HTTP requests).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Attach a Deny policy with Condition: {\u0027Bool\u0027: {\u0027aws:SecureTransport\u0027: \u0027false\u0027}} to bucket \u0027msc-lab-c66ca3ec-critical\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Block Public Access configuration is either disabled or incomplete.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.5,
+                                                         "remediation_suggestion":  "aws s3api put-public-access-block --bucket msc-lab-c66ca3ec-critical --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-c66ca3ec-critical --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-c66ca3ec-critical --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-c66ca3ec-critical/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-c66ca3ec-critical --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-high",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  5,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.4,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Bucket policy does not enforce TLS in transit (allows insecure HTTP requests).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Attach a Deny policy with Condition: {\u0027Bool\u0027: {\u0027aws:SecureTransport\u0027: \u0027false\u0027}} to bucket \u0027msc-lab-c66ca3ec-high\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Block Public Access configuration is either disabled or incomplete.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.5,
+                                                         "remediation_suggestion":  "aws s3api put-public-access-block --bucket msc-lab-c66ca3ec-high --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-c66ca3ec-high --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-c66ca3ec-high --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-c66ca3ec-high/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-c66ca3ec-high --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-low",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "LOW",
+                         "final_risk_score":  3.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-c66ca3ec-low --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-c66ca3ec-low/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-c66ca3ec-low --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-medium",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.1,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Bucket versioning is disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.8,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-versioning --bucket msc-lab-c66ca3ec-medium --versioning-configuration Status=Enabled"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "S3 Server Access Logging is disabled on this bucket.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-logging --bucket msc-lab-c66ca3ec-medium --bucket-logging-status \u0027{\"LoggingEnabled\": {\"TargetBucket\": \"\u003cAUDIT_LOG_BUCKET\u003e\", \"TargetPrefix\": \"msc-lab-c66ca3ec-medium/\"}}\u0027"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "No S3 Lifecycle rules configured to manage object version retention.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.0,
+                                                         "remediation_suggestion":  "aws s3api put-bucket-lifecycle-configuration --bucket msc-lab-c66ca3ec-medium --lifecycle-configuration file://lifecycle.json"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-c66ca3ec-perfect",
+                         "service":  "S3",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "Bucket fully complies with baseline security policies.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "No action required."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-medium-sg",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Security Group \u0027msc-lab-london-medium-sg\u0027 (sg-0ddbd53ad5812bb4c) audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Security Group rule definitions meet baseline policy."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-perfect-sg",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Security Group \u0027msc-lab-london-perfect-sg\u0027 (sg-0a7a54bb4db65e67d) audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Security Group rule definitions meet baseline policy."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-critical-sg",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  9.65,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Security Group \u0027msc-lab-london-critical-sg\u0027 (sg-095472315cd7b02da) exposes remote administrative ports (SSH/RDP) to the public internet (0.0.0.0/0).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.5,
+                                                         "remediation_suggestion":  "aws ec2 revoke-security-group-ingress --group-id sg-095472315cd7b02da --protocol tcp --port 22 --cidr 0.0.0.0/0 --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Security Group \u0027msc-lab-london-critical-sg\u0027 (sg-095472315cd7b02da) exposes database listener ports directly to the public internet (0.0.0.0/0).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.0,
+                                                         "remediation_suggestion":  "aws ec2 revoke-security-group-ingress --group-id sg-095472315cd7b02da --protocol tcp --port 3306 --cidr 0.0.0.0/0 --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-critical",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.1,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Instance \u0027msc-lab-london-critical\u0027 (i-083fc026bbe219598) has legacy IMDSv1 enabled (vulnerable to SSRF credential exfiltration).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "aws ec2 modify-instance-metadata-options --instance-id i-083fc026bbe219598 --http-tokens required --http-endpoint enabled --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Instance \u0027msc-lab-london-critical\u0027 (i-083fc026bbe219598) has a direct public IPv4 address (13.40.189.136) assigned.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.2,
+                                                         "remediation_suggestion":  "Relocate instance \u0027i-083fc026bbe219598\u0027 to a private subnet behind a NAT Gateway or load balancer."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Instance \u0027msc-lab-london-critical\u0027 (i-083fc026bbe219598) has unencrypted attached EBS volume \u0027vol-0f34b85bfe23c6641\u0027.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.8,
+                                                         "remediation_suggestion":  "Enable EBS default encryption and migrate volume \u0027vol-0f34b85bfe23c6641\u0027 to an encrypted volume snapshot."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-medium",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Instance \u0027msc-lab-london-medium\u0027 (i-08ddddac0551a9bb8) has unencrypted attached EBS volume \u0027vol-00550081dfe6af5fb\u0027.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.8,
+                                                         "remediation_suggestion":  "Enable EBS default encryption and migrate volume \u0027vol-00550081dfe6af5fb\u0027 to an encrypted volume snapshot."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-perfect",
+                         "service":  "EC2",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] EC2 Instance \u0027msc-lab-london-perfect\u0027 (i-091e31338e0413d24) audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Instance meets baseline configuration policy."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-us-east-1-high-sg",
+                         "service":  "EC2",
+                         "region":  "us-east-1",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  9.5,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[us-east-1] Security Group \u0027msc-lab-us-east-1-high-sg\u0027 (sg-0ba4e77fac9fc3f13) exposes remote administrative ports (SSH/RDP) to the public internet (0.0.0.0/0).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.5,
+                                                         "remediation_suggestion":  "aws ec2 revoke-security-group-ingress --group-id sg-0ba4e77fac9fc3f13 --protocol tcp --port 22 --cidr 0.0.0.0/0 --region us-east-1"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-us-east-1-high",
+                         "service":  "EC2",
+                         "region":  "us-east-1",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  7.95,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[us-east-1] Instance \u0027msc-lab-us-east-1-high\u0027 (i-00b3e7ff8472cd1e1) has legacy IMDSv1 enabled (vulnerable to SSRF credential exfiltration).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "aws ec2 modify-instance-metadata-options --instance-id i-00b3e7ff8472cd1e1 --http-tokens required --http-endpoint enabled --region us-east-1"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[us-east-1] Instance \u0027msc-lab-us-east-1-high\u0027 (i-00b3e7ff8472cd1e1) has a direct public IPv4 address (44.203.59.193) assigned.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.2,
+                                                         "remediation_suggestion":  "Relocate instance \u0027i-00b3e7ff8472cd1e1\u0027 to a private subnet behind a NAT Gateway or load balancer."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-critical-db",
+                         "service":  "RDS",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  5,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  10.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-critical-db\u0027 (mysql) is Publicly Accessible to the internet.",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.6,
+                                                         "remediation_suggestion":  "aws rds modify-db-instance --db-instance-identifier msc-lab-london-critical-db --no-publicly-accessible --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-critical-db\u0027 (mysql) storage encryption at rest is disabled.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "Create an encrypted snapshot of \u0027msc-lab-london-critical-db\u0027 and restore to a new encrypted instance in region eu-west-2."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-critical-db\u0027 (mysql) has automated backups disabled (retention period: 0 days).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.2,
+                                                         "remediation_suggestion":  "aws rds modify-db-instance --db-instance-identifier msc-lab-london-critical-db --backup-retention-period 7 --apply-immediately --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-critical-db\u0027 (mysql) is deployed as Single-AZ without automated Multi-AZ failover redundancy.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.8,
+                                                         "remediation_suggestion":  "aws rds modify-db-instance --db-instance-identifier msc-lab-london-critical-db --multi-az --apply-immediately --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-critical-db\u0027 (mysql) has automatic minor version security upgrades disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.0,
+                                                         "remediation_suggestion":  "aws rds modify-db-instance --db-instance-identifier msc-lab-london-critical-db --auto-minor-version-upgrade --apply-immediately --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-london-perfect-db",
+                         "service":  "RDS",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] RDS Instance \u0027msc-lab-london-perfect-db\u0027 (mysql) audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Database meets baseline security and availability standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "Root-Account",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] AWS Root Account baseline audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "Root account meets baseline MFA and credential standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-Admin",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027Admin\u0027 is directly attached to \u0027AdministratorAccess\u0027 (Full *:*).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.0,
+                                                         "remediation_suggestion":  "aws iam detach-user-policy --user-name Admin --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-cloud-security-scanner-root",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "LOW",
+                         "final_risk_score":  3.2,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027cloud-security-scanner-root\u0027 has direct user-level policies attached rather than inheriting from IAM Groups.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  3.2,
+                                                         "remediation_suggestion":  "Migrate permissions for \u0027cloud-security-scanner-root\u0027 into dedicated IAM Groups and assign group membership."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-high-admin-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-high-admin-user\u0027 is directly attached to \u0027AdministratorAccess\u0027 (Full *:*).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.0,
+                                                         "remediation_suggestion":  "aws iam detach-user-policy --user-name msc-lab-high-admin-user --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-low-multiple-keys-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "LOW",
+                         "final_risk_score":  2.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-low-multiple-keys-user\u0027 has 2 active access keys simultaneously.",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.8,
+                                                         "remediation_suggestion":  "Delete redundant access keys for \u0027msc-lab-low-multiple-keys-user\u0027 leaving a single active key."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-medium-console-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-medium-console-user\u0027 has console password access enabled without MFA configured.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.8,
+                                                         "remediation_suggestion":  "Enforce MFA registration for user \u0027msc-lab-medium-console-user\u0027 before console login is permitted."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "User-msc-lab-perfect-read-only-user",
+                         "service":  "IAM",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] IAM User \u0027msc-lab-perfect-read-only-user\u0027 identified and audited.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "User complies with baseline identity standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-high-deprecated-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-high-deprecated-lambda\u0027 execution role \u0027msc-lab-lambda-admin-role\u0027 has full AdministratorAccess attached.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.5,
+                                                         "remediation_suggestion":  "aws iam detach-role-policy --role-name msc-lab-lambda-admin-role --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-high-deprecated-lambda\u0027 runs on deprecated runtime \u0027python3.8\u0027.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-high-deprecated-lambda --runtime python3.12 --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-high-deprecated-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-high-deprecated-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-low-notracing-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-low-notracing-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-low-notracing-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-low-notracing-lambda\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-low-notracing-lambda --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-iam",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-iam\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-iam --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-iam\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-iam --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-apigateway",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-apigateway\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-apigateway --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-apigateway\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-apigateway --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-medium-env-novpc-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.15,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-medium-env-novpc-lambda\u0027 stores environment variables using default AWS-managed KMS key rather than a CMK.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.0,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-medium-env-novpc-lambda --kms-key-arn \u003cCUSTOMER_MANAGED_KEY_ARN\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-medium-env-novpc-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-medium-env-novpc-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-rds",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-rds\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-rds --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-rds\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-rds --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-cloudfront",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-cloudfront\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-cloudfront --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-cloudfront\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-cloudfront --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-lambda\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-lambda --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-s3",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-s3\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-s3 --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-s3\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-s3 --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-critical-public-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  10.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-critical-public-lambda\u0027 has an unauthenticated Public Function URL (AuthType: NONE).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.8,
+                                                         "remediation_suggestion":  "aws lambda update-function-url-config --function-name msc-lab-critical-public-lambda --auth-type AWS_IAM --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-critical-public-lambda\u0027 resource policy permits unrestricted public invocation (Principal: *).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.2,
+                                                         "remediation_suggestion":  "aws lambda remove-permission --function-name msc-lab-critical-public-lambda --statement-id AllowPublicInvokeWildcard --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027msc-lab-critical-public-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-critical-public-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-orchestrator",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.3,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 stores environment variables using default AWS-managed KMS key rather than a CMK.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.0,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --kms-key-arn \u003cCUSTOMER_MANAGED_KEY_ARN\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-orchestrator\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-orchestrator --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "exposure-scanner-auditor-ec2",
+                         "service":  "LAMBDA",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  4.35,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-ec2\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-ec2 --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] Function \u0027exposure-scanner-auditor-ec2\u0027 active X-Ray tracing is disabled (Mode: \u0027PassThrough\u0027).",
+                                                         "severity":  "LOW",
+                                                         "risk_score":  2.5,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name exposure-scanner-auditor-ec2 --tracing-config Mode=Active --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-us-east-1-admin-lambda",
+                         "service":  "LAMBDA",
+                         "region":  "us-east-1",
+                         "total_vulnerabilities_found":  2,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.65,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[us-east-1] Function \u0027msc-lab-us-east-1-admin-lambda\u0027 execution role \u0027msc-lab-lambda-admin-role\u0027 has full AdministratorAccess attached.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.5,
+                                                         "remediation_suggestion":  "aws iam detach-role-policy --role-name msc-lab-lambda-admin-role --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[us-east-1] Function \u0027msc-lab-us-east-1-admin-lambda\u0027 is not configured with VPC isolation.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  4.2,
+                                                         "remediation_suggestion":  "aws lambda update-function-configuration --function-name msc-lab-us-east-1-admin-lambda --vpc-config SubnetIds=\u003cSUBNET_IDS\u003e,SecurityGroupIds=\u003cSG_ID\u003e --region us-east-1"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-critical-http-api (23yrcxkl3m)",
+                         "service":  "APIGATEWAY",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  4,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  9.95,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API \u0027msc-lab-critical-http-api\u0027 (23yrcxkl3m) has default execute-api endpoint enabled.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "aws apigatewayv2 update-api --api-id 23yrcxkl3m --disable-execute-api-endpoint --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API \u0027msc-lab-critical-http-api\u0027 (23yrcxkl3m) allows wildcard origin (\u0027*\u0027) in CORS configuration.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.8,
+                                                         "remediation_suggestion":  "aws apigatewayv2 update-api --api-id 23yrcxkl3m --cors-configuration AllowOrigins=\u0027[\"https://yourdomain.com\"]\u0027 --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API \u0027msc-lab-critical-http-api\u0027 route \u0027GET /public-data\u0027 allows unauthenticated access (AuthorizationType: NONE).",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.5,
+                                                         "remediation_suggestion":  "aws apigatewayv2 update-route --api-id 23yrcxkl3m --route-id mz80nl1 --authorization-type JWT --authorizer-id \u003cAUTHORIZER_ID\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API \u0027msc-lab-critical-http-api\u0027 stage \u0027$default\u0027 has CloudWatch access logging disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "aws apigatewayv2 update-stage --api-id 23yrcxkl3m --stage-name \u0027$default\u0027 --access-log-settings DestinationArn=\u003cCW_LOG_GROUP_ARN\u003e,Format=\u0027$context.identity.sourceIp $context.routeKey\u0027 --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-compliant-http-api (ulu5wirnjk)",
+                         "service":  "APIGATEWAY",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "ADVISORY",
+                         "final_risk_score":  0.0,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API Gateway v2 \u0027msc-lab-compliant-http-api\u0027 (ulu5wirnjk) audited and compliant.",
+                                                         "severity":  "ADVISORY",
+                                                         "risk_score":  0.0,
+                                                         "remediation_suggestion":  "API configuration meets established baseline security standards."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-medium-http-api (ylol5ajmpj)",
+                         "service":  "APIGATEWAY",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.5,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] API \u0027msc-lab-medium-http-api\u0027 stage \u0027$default\u0027 has CloudWatch access logging disabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "aws apigatewayv2 update-stage --api-id ylol5ajmpj --stage-name \u0027$default\u0027 --access-log-settings DestinationArn=\u003cCW_LOG_GROUP_ARN\u003e,Format=\u0027$context.identity.sourceIp $context.routeKey\u0027 --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "msc-lab-high-rest-api (rp7ei2otzb)",
+                         "service":  "APIGATEWAY",
+                         "region":  "eu-west-2",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.5,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] REST API \u0027msc-lab-high-rest-api\u0027 (REGIONAL) lacks an IP/VPC restrictive Resource Policy.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  7.5,
+                                                         "remediation_suggestion":  "aws apigateway update-rest-api --rest-api-id rp7ei2otzb --patch-operations op=replace,path=/policy,value=\u0027\u003cRESTRICTIVE_POLICY_JSON\u003e\u0027 --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] REST API \u0027msc-lab-high-rest-api\u0027 stage \u0027dev\u0027 is not protected by an AWS WAF Web ACL.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.2,
+                                                         "remediation_suggestion":  "aws wafv2 associate-web-acl --web-acl-arn \u003cWAF_WEB_ACL_ARN\u003e --resource-arn \u003cSTAGE_ARN\u003e --region eu-west-2"
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[eu-west-2] REST API \u0027msc-lab-high-rest-api\u0027 stage \u0027dev\u0027 has CloudWatch execution logging disabled (loggingLevel: OFF).",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "aws apigateway update-stage --rest-api-id rp7ei2otzb --stage-name \u0027dev\u0027 --patch-operations op=replace,path=/*/*/logging/loglevel,value=INFO --region eu-west-2"
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "d1a3r4249p2bbp.cloudfront.net (E8UAN18UWD4R5)",
+                         "service":  "CLOUDFRONT",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  4,
+                         "highest_severity_level":  "CRITICAL",
+                         "final_risk_score":  9.95,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E8UAN18UWD4R5\u0027 S3 origin \u0027msc-lab-0dc808a4-cf-origin.s3.eu-west-2.amazonaws.com\u0027 lacks Origin Access Control (OAC). Direct S3 exposure risk.",
+                                                         "severity":  "CRITICAL",
+                                                         "risk_score":  9.5,
+                                                         "remediation_suggestion":  "Associate an Origin Access Control (OAC) with origin \u0027S3Origin-Critical\u0027 and restrict S3 bucket policy."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E8UAN18UWD4R5\u0027 default cache behavior permits unencrypted HTTP traffic (ViewerProtocolPolicy: allow-all).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.5,
+                                                         "remediation_suggestion":  "Update ViewerProtocolPolicy to \u0027redirect-to-https\u0027 or \u0027https-only\u0027 for distribution \u0027E8UAN18UWD4R5\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E8UAN18UWD4R5\u0027 is not protected by an AWS WAF Web ACL.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.2,
+                                                         "remediation_suggestion":  "Associate an AWS WAFv2 Web ACL (CLOUDFRONT scope) with distribution \u0027E8UAN18UWD4R5\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E8UAN18UWD4R5\u0027 does not have standard access logging enabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "Enable standard access logging targeting a designated logging S3 bucket for distribution \u0027E8UAN18UWD4R5\u0027."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "dcuw4xcyr8x5j.cloudfront.net (E3S8HMNPTQSWIH)",
+                         "service":  "CLOUDFRONT",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  3,
+                         "highest_severity_level":  "HIGH",
+                         "final_risk_score":  8.8,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E3S8HMNPTQSWIH\u0027 default cache behavior permits unencrypted HTTP traffic (ViewerProtocolPolicy: allow-all).",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.5,
+                                                         "remediation_suggestion":  "Update ViewerProtocolPolicy to \u0027redirect-to-https\u0027 or \u0027https-only\u0027 for distribution \u0027E3S8HMNPTQSWIH\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E3S8HMNPTQSWIH\u0027 is not protected by an AWS WAF Web ACL.",
+                                                         "severity":  "HIGH",
+                                                         "risk_score":  8.2,
+                                                         "remediation_suggestion":  "Associate an AWS WAFv2 Web ACL (CLOUDFRONT scope) with distribution \u0027E3S8HMNPTQSWIH\u0027."
+                                                     },
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E3S8HMNPTQSWIH\u0027 does not have standard access logging enabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "Enable standard access logging targeting a designated logging S3 bucket for distribution \u0027E3S8HMNPTQSWIH\u0027."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "do7c3ixhlaxxo.cloudfront.net (E2LLG3UY2K39LP)",
+                         "service":  "CLOUDFRONT",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.5,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E2LLG3UY2K39LP\u0027 does not have standard access logging enabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "Enable standard access logging targeting a designated logging S3 bucket for distribution \u0027E2LLG3UY2K39LP\u0027."
+                                                     }
+                                                 ]
+                     },
+                     {
+                         "resource_name":  "dh2fdgocgbrwm.cloudfront.net (E3CG7NFBUC2C9Z)",
+                         "service":  "CLOUDFRONT",
+                         "region":  "global",
+                         "total_vulnerabilities_found":  1,
+                         "highest_severity_level":  "MEDIUM",
+                         "final_risk_score":  5.5,
+                         "individual_problems":  [
+                                                     {
+                                                         "vulnerability_description":  "[global] CloudFront Distribution \u0027E3CG7NFBUC2C9Z\u0027 does not have standard access logging enabled.",
+                                                         "severity":  "MEDIUM",
+                                                         "risk_score":  5.5,
+                                                         "remediation_suggestion":  "Enable standard access logging targeting a designated logging S3 bucket for distribution \u0027E3CG7NFBUC2C9Z\u0027."
+                                                     }
+                                                 ]
+                     }
+                 ]
+}
